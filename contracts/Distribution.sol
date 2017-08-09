@@ -44,12 +44,12 @@ contract TokenDistribution is Ownable {
     address public ukgDepositAddr;              // Deposit address for UKG for Unikrn
 
     // Parameters
-    bool    public onHold;                      // Place on hold if something goes awry
-    bool    public distributionFinalized;       // Denotes state of distribution
-    uint256 public distributionStartBlock;      // Begining of the distribution
-    uint256 public lockupDistributionStartTime; // Block time to start the lockup distribution counter
-    uint256 public totalTokenSupply;            // Total supply of tokens distributed so far
-    uint256 public distributionPhaseOverTime;   // Distribution phase ends 4 months after the completion of the sale
+    bool    public onHold;                           // Place on hold if something goes awry
+    bool    public distributionFinalized;            // Denotes state of distribution
+    uint256 public distributionStartBlock;           // Begining of the distribution
+    uint256 public lockupDistributionStartTimestamp; // Block timestamp to start the lockup distribution counter
+    uint256 public totalTokenSupply;                 // Total supply of tokens distributed so far
+    uint256 public distributionOverTimestamp;   // Distribution phase ends 4 months after the completion of the sale
 
     // Events
     event CreateUKG(address indexed _to, uint256 _value);      // Logs the creation of the token
@@ -75,14 +75,14 @@ contract TokenDistribution is Ownable {
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
     /// @param _distributionStartBlock Starting block for the distribution period
-    function TokenDistribution(address _ukgDepositAddr, uint256 _distributionStartBlock, uint256 _lockupDistributionStartTime, uint256 _distributionPhaseOverTime)
+    function TokenDistribution(address _ukgDepositAddr, uint256 _distributionStartBlock, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp)
     {
         onHold = false;                                    // Shut down if something goes awry
         distributionFinalized = false;                     // Denotes the end of the distribution phase
         ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
         distributionStartBlock = _distributionStartBlock;  // Distribution start block
-        lockupDistributionStartTime = _lockupDistributionStartTime;
-        distributionPhaseOverTime = _distributionPhaseOverTime;
+        lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
+        distributionOverTimestamp = _distributionOverTimestamp;
         totalTokenSupply = UKG_FUND;                       // Total supply of UKG distributed so far, initialized with total supply amount
         ukgAllocation[ukgDepositAddr] = UKG_FUND;          // Deposit Unikrn funds that are preallocated to the Unikrn team
         CreateUKG(ukgDepositAddr, UKG_FUND);               // Logs Unikrn fund
@@ -130,9 +130,9 @@ contract TokenDistribution is Ownable {
     /// @dev Returns the current period the distribution is on. Will be 1-10. UPdates every 9 days
     function whichPhase(uint timestamp) constant returns (uint) {
         // if the time is less than the start time, return 0. or else return the new time.
-        return timestamp < lockupDistributionStartTime
+        return timestamp < lockupDistributionStartTimestamp
         ? 0
-        : timestamp.sub(lockupDistributionStartTime) / 9 days + 1;
+        : timestamp.sub(lockupDistributionStartTimestamp) / 9 days + 1;
     }
 
     /// @dev Presale participants call this to claim their tokens.
@@ -164,7 +164,7 @@ contract TokenDistribution is Ownable {
         }
     }
 
-    /// @dev Send remaining tokens to Unikrn to be distributed to the appropriate users
+    /// @dev Send all remaining tokens to Unikrn to be distributed to the appropriate users
     function finishDistribution()
     onlyOwner
     distributionOver
@@ -197,8 +197,29 @@ contract TokenDistribution is Ownable {
     external
     onlyOwner
     {
-        require(block.timestamp > distributionPhaseOverTime);
+        require(block.timestamp > distributionOverTimestamp);
         distributionFinalized = true;
     }
 
+    /// @dev Changes UKG deposit address
+    /// @param _wallet Wallet address to change where UKG gets deposited
+    function changeUkgDepositAddr(address _wallet)
+    onlyOwner
+    notHeld
+    {
+        require(_wallet != 0);
+
+        ukgDepositAddr = _wallet;
+    }
+
+    /// @dev Changes distribution end timestamp
+    /// @param _newTime Timestamp to change the distribution phase end
+    function changeDistributionEndBlock(uint _newTime)
+    onlyOwner
+    notHeld
+    {
+        require(_newTime != 0);
+
+        distributionOverTimestamp = _newTime;
+    }
 }
