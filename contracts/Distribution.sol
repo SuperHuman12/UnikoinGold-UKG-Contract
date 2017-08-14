@@ -26,7 +26,7 @@ import {StandardToken} from './Token.sol';
   *
   */
 
-contract TokenDistribution is Ownable {
+contract TokenDistribution is Ownable, StandardToken {
     using SafeMath for uint;
 
     // Metadata
@@ -35,13 +35,13 @@ contract TokenDistribution is Ownable {
 
     // Constants
     uint256 public constant EXP_18 = 18;                                          // Used to convert Wei to ETH
-    uint256 public constant UKG_FUND = 700 * (10**6) * 10**EXP_18;                // 800M UKG reserved for Unikrn use
-    uint256 public constant TOKEN_DIST_AMOUNT_SALE = 1 * (10**8) * 18**EXP_18;    // 100M tokens available from sale
-    uint256 public constant TOKEN_DIST_AMOUNT_PRESALE = 1 * (10**8) * 18**EXP_18; // 100M tokens available from pressale
-    uint256 public constant TOKEN_CREATION_CAP =  1 * (10**9);                    // 1B tokens created
+    uint256 public constant UKG_FUND = 800 * (10**6) * 10**EXP_18;                // 800M UKG reserved for Unikrn use
+    uint256 public constant TOKEN_DIST_AMOUNT_SALE = 1 * (10**8) * 10**EXP_18;    // 100M tokens available from sale
+    uint256 public constant TOKEN_DIST_AMOUNT_PRESALE = 1 * (10**8) * 10**EXP_18; // 100M tokens available from presale
+    uint256 public constant TOKEN_CREATION_CAP =  1 * (10**9) * 10**EXP_18;       // 1B tokens created
 
     // Secure wallets
-    address public ukgDepositAddr;              // Deposit address for UKG for Unikrn
+    address public ukgDepositAddr;                   // Deposit address for UKG for Unikrn
 
     // Parameters
     bool    public onHold;                           // Place on hold if something goes awry
@@ -49,14 +49,13 @@ contract TokenDistribution is Ownable {
     uint256 public distributionStartBlock;           // Begining of the distribution
     uint256 public lockupDistributionStartTimestamp; // Block timestamp to start the lockup distribution counter
     uint256 public totalTokenSupply;                 // Total supply of tokens distributed so far
-    uint256 public distributionOverTimestamp;   // Distribution phase ends 4 months after the completion of the sale
+    uint256 public distributionOverTimestamp;        // Distribution phase ends 4 months after the completion of the sale
 
     // Events
     event CreateUKG(address indexed _to, uint256 _value);      // Logs the creation of the token
     event LogClaim(uint phase, address user, uint amount);     // Logs the user claiming their tokens
 
     // Mapping
-    mapping (address => uint256) public ukgAllocation;            // UKG allocation per user
     mapping (address => uint256) public userAllowedAllocation;    // User able to claim tokens
     mapping (address => uint256) public remainingAllowance;       // Amount of tokens user has left to claim
     mapping (uint => mapping (address => bool))  public  claimed; // Sets status of claim
@@ -84,7 +83,7 @@ contract TokenDistribution is Ownable {
         lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
         distributionOverTimestamp = _distributionOverTimestamp;
         totalTokenSupply = UKG_FUND;                       // Total supply of UKG distributed so far, initialized with total supply amount
-        ukgAllocation[ukgDepositAddr] = UKG_FUND;          // Deposit Unikrn funds that are preallocated to the Unikrn team
+        balances[ukgDepositAddr] = UKG_FUND;               // Deposit Unikrn funds that are preallocated to the Unikrn team
         CreateUKG(ukgDepositAddr, UKG_FUND);               // Logs Unikrn fund
     }
 
@@ -98,7 +97,7 @@ contract TokenDistribution is Ownable {
         require(block.number < distributionStartBlock);   // Addresses must be input prior to distribution
 
         for (uint i = 0; i < approvedSaleUsers.length; i++) {
-            ukgAllocation[approvedSaleUsers[i]] = approvedSaleUsersAllocation[i];
+            balances[approvedSaleUsers[i]] = approvedSaleUsersAllocation[i];
         }
     }
 
@@ -151,8 +150,8 @@ contract TokenDistribution is Ownable {
         claimed[phase][msg.sender] = true;                  // User cannot participate in this phase again
         remainingAllowance[msg.sender] -= phaseAllocation;  // Subtract the claimed tokens from the remaining allocation
 
-        totalTokenSupply += phaseAllocation;   // Add to the total number of presale tokens distributed
-        ukgAllocation[msg.sender] = phaseAllocation;        // Distribute tokens to user
+        totalTokenSupply += phaseAllocation;                // Add to the total number of presale tokens distributed
+        balances[msg.sender] = phaseAllocation;             // Distribute tokens to user
         LogClaim(phase, msg.sender, phaseAllocation);       // Logs the user claiming their tokens
 
     }
@@ -172,7 +171,7 @@ contract TokenDistribution is Ownable {
         require(totalTokenSupply < TOKEN_CREATION_CAP);    // If all tokens havent been distributed, throw
 
         uint256 remainingTokens = TOKEN_CREATION_CAP - totalTokenSupply;    // The remaining tokens are calculated
-        ukgAllocation[ukgDepositAddr] = remainingTokens;                    // Deposit remaining funds to Unikrn team
+        balances[ukgDepositAddr] = remainingTokens;                        // Deposit remaining funds to Unikrn team
         CreateUKG(ukgDepositAddr, remainingTokens);
     }
 
