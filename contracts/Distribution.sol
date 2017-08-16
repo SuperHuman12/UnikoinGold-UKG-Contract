@@ -217,4 +217,8 @@ contract TokenDistribution is Ownable, StandardToken {
 
         distributionOverTimestamp = _newTime;
     }
+
+    function getBalance(address addr) returns(uint) {
+        return balances[addr];
+    }
 }
