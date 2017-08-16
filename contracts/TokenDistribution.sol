@@ -78,7 +78,7 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param _distributionStartTime Starting time for the distribution period
     /// @param _lockupDistributionStartTimestamp Start time of the lockup phases
     /// @param _distributionOverTimestamp End time of the distribution
-    function tokenDistribution(address _ukgDepositAddr, uint256 _distributionStartTime, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp)
+    function TokenDistribution(address _ukgDepositAddr, uint256 _distributionStartTime, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp)
     {
         onHold = false;                                    // Shut down if something goes awry
         distributionFinalized = false;                     // Denotes the end of the distribution phase
