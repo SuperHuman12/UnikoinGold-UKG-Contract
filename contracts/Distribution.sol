@@ -46,7 +46,7 @@ contract TokenDistribution is Ownable, StandardToken {
     // Parameters
     bool    public onHold;                           // Place on hold if something goes awry
     bool    public distributionFinalized;            // Denotes state of distribution
-    uint256 public distributionStartBlock;           // Begining of the distribution
+    uint256 public distributionStartTime;           // Begining of the distribution
     uint256 public lockupDistributionStartTimestamp; // Block timestamp to start the lockup distribution counter
     uint256 public totalTokenSupply;                 // Total supply of tokens distributed so far
     uint256 public distributionOverTimestamp;        // Distribution phase ends 4 months after the completion of the sale
@@ -75,15 +75,17 @@ contract TokenDistribution is Ownable, StandardToken {
 
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
-    /// @param _distributionStartBlock Starting block for the distribution period
-    function tokenDistribution(address _ukgDepositAddr, uint256 _distributionStartBlock, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp)
+    /// @param _distributionStartTime Starting time for the distribution period
+    /// @param _lockupDistributionStartTimestamp Start time of the lockup phases
+    /// @param _distributionOverTimestamp End time of the distribution
+    function tokenDistribution(address _ukgDepositAddr, uint256 _distributionStartTime, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp)
     {
         onHold = false;                                    // Shut down if something goes awry
         distributionFinalized = false;                     // Denotes the end of the distribution phase
         saleUsersIterator = 0;                             // Used to iterate through sale users
         presaleUsersIterator = 0;                          // Used to iterate through presale users
         ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
-        distributionStartBlock = _distributionStartBlock;  // Distribution start block
+        distributionStartTime = _distributionStartTime;    // Distribution start block
         lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
         distributionOverTimestamp = _distributionOverTimestamp;
         totalTokenSupply = UKG_FUND;                       // Total supply of UKG distributed so far, initialized with total supply amount
@@ -95,7 +97,7 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param approvedSaleUsers Array of users
     /// @param approvedSaleUsersAllocation Array of users' allocation
     function distrubuteSaleTokens(address[] approvedSaleUsers, uint256[] approvedSaleUsersAllocation) onlyOwner notHeld {
-        require(block.number < distributionStartBlock);   // Addresses must be input prior to distribution
+        require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
         for (saleUsersIterator; saleUsersIterator < approvedSaleUsers.length; saleUsersIterator++) {
             totalTokenSupply += approvedSaleUsersAllocation[saleUsersIterator];                                   // Adds tokens to total supply
@@ -108,7 +110,7 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param singleApprovedSaleUser User to input
     /// @param singleApprovedSaleUserAllocation User allocation
     function distrubuteSaleTokensIterate(address singleApprovedSaleUser,uint256 singleApprovedSaleUserAllocation) onlyOwner notHeld {
-        require(block.number < distributionStartBlock);                           // Addresses must be input prior to distribution
+        require(block.timestamp < distributionStartTime);                           // Addresses must be input prior to distribution
 
         totalTokenSupply += singleApprovedSaleUserAllocation;                     // Adds tokens to total supply
         balances[singleApprovedSaleUser] = singleApprovedSaleUserAllocation;      // Distributes tokens to user
@@ -119,7 +121,7 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param approvedPresaleContributors Array of users
     /// @param approvedPresaleContributorsAllocation Array of users' allocation
     function addPresaleContributors(address[] approvedPresaleContributors, uint256[] approvedPresaleContributorsAllocation) onlyOwner notHeld {
-        require(block.number < distributionStartBlock);   // Addresses must be input prior to distribution
+        require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
         for (uint i = 0; i < approvedPresaleContributors.length; i++) {
             userAllowedAllocation[approvedPresaleContributors[i]] = approvedPresaleContributorsAllocation[i];
@@ -130,8 +132,8 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @dev Allocates tokens to presale participants iteratively
     /// @param singleApprovedPresaleContributor User to input
     /// @param singleApprovedPresaleContributorAllocation User allocation
-    function addPresaleContributors(address singleApprovedPresaleContributor, uint256 singleApprovedPresaleContributorAllocation) onlyOwner notHeld {
-        require(block.number < distributionStartBlock);   // Addresses must be input prior to distribution
+    function addPresaleContributorsIterate(address singleApprovedPresaleContributor, uint256 singleApprovedPresaleContributorAllocation) onlyOwner notHeld {
+        require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
         userAllowedAllocation[singleApprovedPresaleContributor] = singleApprovedPresaleContributorAllocation;
         remainingAllowance[singleApprovedPresaleContributor] = singleApprovedPresaleContributorAllocation;
@@ -146,7 +148,7 @@ contract TokenDistribution is Ownable, StandardToken {
         return whichPhase(time());
     }
 
-    /// @dev Returns the current period the distribution is on. Will be 1-10. UPdates every 9 days
+    /// @dev Returns the current period the distribution is on. Will be 1-10. Updates every 9 days
     function whichPhase(uint timestamp) constant returns (uint) {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < lockupDistributionStartTimestamp
@@ -171,7 +173,6 @@ contract TokenDistribution is Ownable, StandardToken {
         totalTokenSupply += phaseAllocation;                // Add to the total number of presale tokens distributed
         balances[msg.sender] = phaseAllocation;             // Distribute tokens to user
         LogClaimEvent(phase, msg.sender, phaseAllocation);  // Logs the user claiming their tokens
-
     }
 
     /// @dev Called to iterate through phases and distribute tokens
@@ -195,7 +196,6 @@ contract TokenDistribution is Ownable, StandardToken {
         revert();
     }
 
-
     /*
      * Owner-only functions
      */
@@ -216,9 +216,5 @@ contract TokenDistribution is Ownable, StandardToken {
         require(_newTime != 0);
 
         distributionOverTimestamp = _newTime;
-    }
-
-    function getBalance(address addr) returns(uint) {
-        return balances[addr];
     }
 }
