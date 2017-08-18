@@ -35,6 +35,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
     // Constants
     uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
+    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 135M UKG available in presale
     uint256 public constant UKG_FUND = 800 * (10**6) * 10**EXP_18;                     // 800M UKG reserved for Unikrn use
     uint256 public constant TOKEN_DIST_AMOUNT_AFTER_SALE = 935 * (10**6) * 10**EXP_18; // 935M tokens distributed after sale distribution
     uint256 public constant TOKEN_CREATION_CAP =  1 * (10**9) * 10**EXP_18;            // 1B tokens created
@@ -44,12 +45,15 @@ contract TokenDistribution is Ownable, StandardToken {
     // Parameters
     bool    public onHold;                           // Place on hold if something goes awry
     bool    public distributionFinalized;            // Denotes state of distribution
-    uint256 public distributionStartTime;           // Begining of the distribution
+    bool    public saleTokensDistributed;            // True when all sale tokens are distributed
+    bool    public presaleTokensDistributed;         // True when all presale tokens are accounted for
+    uint256 public distributionStartTime;            // Begining of the distribution
     uint256 public lockupDistributionStartTimestamp; // Block timestamp to start the lockup distribution counter
     uint256 public totalTokenSupply;                 // Total supply of tokens distributed so far
     uint256 public distributionOverTimestamp;        // Distribution phase ends 4 months after the completion of the sale
     uint256 public saleUsersIterator;                // Used to iterate through sale users
     uint256 public presaleUsersIterator;             // Used to iterate through presale users
+    uint256 public presaleAllocationCount;           // Used to avoid assigning >1BN tokens
 
     // Events
     event CreateUKGEvent(address indexed _to, uint256 _value);    // Logs the creation of the token
@@ -71,6 +75,16 @@ contract TokenDistribution is Ownable, StandardToken {
         _;
     }
 
+    modifier saleTokensDistributionOver {
+        require(saleTokensDistributed);
+        _;
+    }
+
+    modifier presaleTokensDistributionOver {
+        require(presaleTokensDistributed);
+        _;
+    }
+
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
     /// @param _distributionStartTime Starting time for the distribution period
@@ -80,8 +94,11 @@ contract TokenDistribution is Ownable, StandardToken {
     {
         onHold = false;                                    // Shut down if something goes awry
         distributionFinalized = false;                     // Denotes the end of the distribution phase
+        saleTokensDistributed = false;                     // Sale tokens not yet distributed
+        presaleTokensDistributed = false;                  // Presale tokens not yet accounted for
         saleUsersIterator = 0;                             // Used to iterate through sale users
         presaleUsersIterator = 0;                          // Used to iterate through presale users
+        presaleAllocationCount = 0;                        // No presale tokens accounted for upon contract creation
         ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
         distributionStartTime = _distributionStartTime;    // Distribution start block
         lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
@@ -97,12 +114,12 @@ contract TokenDistribution is Ownable, StandardToken {
     function distrubuteSaleTokens(address[] approvedSaleUsers, uint256[] approvedSaleUsersAllocation) onlyOwner notHeld {
         require(block.timestamp < distributionStartTime);           // Addresses must be input prior to distribution
 
-        for (saleUsersIterator; saleUsersIterator < approvedSaleUsers.length; saleUsersIterator++) {
+        for (uint256 saleUsersIterator = 0; saleUsersIterator < approvedSaleUsers.length; saleUsersIterator++) {
 
-            uint tempTotalSupply  = totalTokenSupply.add(approvedSaleUsersAllocation[saleUsersIterator]);         // Temp total supply balance
-            require(tempTotalSupply <= TOKEN_DIST_AMOUNT_AFTER_SALE);                                             // Token distribution cannot exceed 935M tokens
+            uint tempSaleTotalSupply  = totalTokenSupply.add(approvedSaleUsersAllocation[saleUsersIterator]);         // Temp total supply balance
+            require(tempSaleTotalSupply <= TOKEN_DIST_AMOUNT_AFTER_SALE);                                             // Token distribution cannot exceed 935M tokens
 
-            totalTokenSupply = tempTotalSupply;                                                                   // Adds tokens to total supply
+            totalTokenSupply = tempSaleTotalSupply;                                                                   // Adds tokens to total supply
             balances[approvedSaleUsers[saleUsersIterator]] = approvedSaleUsersAllocation[saleUsersIterator];      // Distributes tokens to user
             CreateUKGEvent(approvedSaleUsers[saleUsersIterator], approvedSaleUsersAllocation[saleUsersIterator]); // Logs Unikrn fund
         }
@@ -114,10 +131,10 @@ contract TokenDistribution is Ownable, StandardToken {
     function distrubuteSaleTokensIterate(address singleApprovedSaleUser,uint256 singleApprovedSaleUserAllocation) onlyOwner notHeld {
         require(block.timestamp < distributionStartTime);                               // Addresses must be input prior to distribution
 
-        uint tempTotalSupply  = totalTokenSupply.add(singleApprovedSaleUserAllocation); // Temp total supply balance
-        require(tempTotalSupply <= TOKEN_DIST_AMOUNT_AFTER_SALE);                       // Token distribution cannot exceed 935M tokens
+        uint tempSaleTotalSupply  = totalTokenSupply.add(singleApprovedSaleUserAllocation); // Temp total supply balance
+        require(tempSaleTotalSupply <= TOKEN_DIST_AMOUNT_AFTER_SALE);                       // Token distribution cannot exceed 935M tokens
 
-        totalTokenSupply = tempTotalSupply;                                             // Adds tokens to total supply
+        totalTokenSupply = tempSaleTotalSupply;                                             // Adds tokens to total supply
         balances[singleApprovedSaleUser] = singleApprovedSaleUserAllocation;            // Distributes tokens to user
         CreateUKGEvent(singleApprovedSaleUser, singleApprovedSaleUserAllocation);       // Logs Unikrn fund
     }
@@ -125,21 +142,30 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @dev Allocates tokens to presale participants
     /// @param approvedPresaleContributors Array of users
     /// @param approvedPresaleContributorsAllocation Array of users' allocation
-    function addPresaleContributors(address[] approvedPresaleContributors, uint256[] approvedPresaleContributorsAllocation) onlyOwner notHeld {
+    function addPresaleContributors(address[] approvedPresaleContributors, uint256[] approvedPresaleContributorsAllocation) onlyOwner notHeld saleTokensDistributionOver {
         require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
-        for (uint i = 0; i < approvedPresaleContributors.length; i++) {
-            userAllowedAllocation[approvedPresaleContributors[i]] = approvedPresaleContributorsAllocation[i];
-            remainingAllowance[approvedPresaleContributors[i]] = approvedPresaleContributorsAllocation[i];
+        for (uint256 presalesUserIterator = 0; presalesUserIterator < approvedPresaleContributors.length; presalesUserIterator++) {
+
+            uint tempPresaleTotalSupply  = presaleAllocationCount.add(approvedPresaleContributorsAllocation[presalesUserIterator]); // Temp total supply balance
+            require(tempPresaleTotalSupply <= PRESALE_TOKEN_ALLOCATION_CAP);      // Cannot create > 1BN tokens
+
+            presaleAllocationCount = tempPresaleTotalSupply;                      // Add to presale allocations
+            userAllowedAllocation[approvedPresaleContributors[presalesUserIterator]] = approvedPresaleContributorsAllocation[presalesUserIterator];
+            remainingAllowance[approvedPresaleContributors[presalesUserIterator]] = approvedPresaleContributorsAllocation[presalesUserIterator];
         }
     }
 
     /// @dev Allocates tokens to presale participants iteratively
     /// @param singleApprovedPresaleContributor User to input
     /// @param singleApprovedPresaleContributorAllocation User allocation
-    function addPresaleContributorsIterate(address singleApprovedPresaleContributor, uint256 singleApprovedPresaleContributorAllocation) onlyOwner notHeld {
+    function addPresaleContributorsIterate(address singleApprovedPresaleContributor, uint256 singleApprovedPresaleContributorAllocation) onlyOwner notHeld saleTokensDistributionOver {
         require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
+        uint tempPresaleTotalSupply  = presaleAllocationCount.add(singleApprovedPresaleContributorAllocation); // Temp total supply balance
+        require(tempPresaleTotalSupply <= PRESALE_TOKEN_ALLOCATION_CAP);      // Cannot create > 1BN tokens
+
+        presaleAllocationCount = tempPresaleTotalSupply;                      // Add to presale allocations
         userAllowedAllocation[singleApprovedPresaleContributor] = singleApprovedPresaleContributorAllocation;
         remainingAllowance[singleApprovedPresaleContributor] = singleApprovedPresaleContributorAllocation;
     }
@@ -181,7 +207,7 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev Called to iterate through phases and distribute tokens
-    function claim() {
+    function claim() presaleTokensDistributionOver {
         for (uint i = 1; i <= currentPhase(); i++) {
             require(i <= 10);   // Max of 10 phases. Used to stop from infinitely looping through
             claimTokens(i);     // Calls claim function
@@ -221,5 +247,19 @@ contract TokenDistribution is Ownable, StandardToken {
         require(_newTime != 0);
 
         distributionOverTimestamp = _newTime;
+    }
+
+    /// @dev Signals the end of the sale distribution
+    function finalizeSaleDistribution() external onlyOwner {
+        require(totalTokenSupply == TOKEN_DIST_AMOUNT_AFTER_SALE);  // The number of tokens in existence must match the total at this point in the sale
+
+        saleTokensDistributed != saleTokensDistributed;
+    }
+
+    /// @dev Signals the end of the presale allocation
+    function finalizePresaleDistribution() external onlyOwner {
+        require(presaleAllocationCount == PRESALE_TOKEN_ALLOCATION_CAP);  // The number of tokens in existence must match the total at this point in the sale
+
+        saleTokensDistributed != saleTokensDistributed;
     }
 }
