@@ -50,6 +50,8 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public lockupDistributionStartTimestamp; // Block timestamp to start the lockup distribution counter
     uint256 public totalTokenSupply;                 // Total supply of tokens distributed so far
     uint256 public distributionOverTimestamp;        // Distribution phase ends 4 months after the completion of the sale
+    uint256 public saleUsersIterator;                // Used to iterate through sale users
+    uint256 public presaleUsersIterator;             // Used to iterate through presale users
 
     // Events
     event CreateUKGEvent(address indexed _to, uint256 _value);    // Logs the creation of the token
@@ -80,6 +82,8 @@ contract TokenDistribution is Ownable, StandardToken {
     {
         onHold = false;                                    // Shut down if something goes awry
         distributionFinalized = false;                     // Denotes the end of the distribution phase
+        saleUsersIterator = 0;                             // Used to iterate through sale users
+        presaleUsersIterator = 0;                          // Used to iterate through presale users
         ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
         distributionStartTime = _distributionStartTime;    // Distribution start block
         lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
@@ -95,7 +99,7 @@ contract TokenDistribution is Ownable, StandardToken {
     function distrubuteSaleTokens(address[] approvedSaleUsers, uint256[] approvedSaleUsersAllocation) onlyOwner notHeld {
         require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
-        for (uint256 saleUsersIterator = 0; saleUsersIterator < approvedSaleUsers.length; saleUsersIterator++) {
+        for (saleUsersIterator; saleUsersIterator < approvedSaleUsers.length; saleUsersIterator++) {
             totalTokenSupply += approvedSaleUsersAllocation[saleUsersIterator];                                   // Adds tokens to total supply
             balances[approvedSaleUsers[saleUsersIterator]] = approvedSaleUsersAllocation[saleUsersIterator];      // Distributes tokens to user
             CreateUKGEvent(approvedSaleUsers[saleUsersIterator], approvedSaleUsersAllocation[saleUsersIterator]); // Logs Unikrn fund
@@ -119,9 +123,9 @@ contract TokenDistribution is Ownable, StandardToken {
     function addPresaleContributors(address[] approvedPresaleContributors, uint256[] approvedPresaleContributorsAllocation) onlyOwner notHeld {
         require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
 
-        for (uint256 presaleUserIterator = 0; presaleUserIterator < approvedPresaleContributors.length; presaleUserIterator++) {
-            userAllowedAllocation[approvedPresaleContributors[presaleUserIterator]] = approvedPresaleContributorsAllocation[presaleUserIterator];
-            remainingAllowance[approvedPresaleContributors[presaleUserIterator]] = approvedPresaleContributorsAllocation[presaleUserIterator];
+        for (uint i = 0; i < approvedPresaleContributors.length; i++) {
+            userAllowedAllocation[approvedPresaleContributors[i]] = approvedPresaleContributorsAllocation[i];
+            remainingAllowance[approvedPresaleContributors[i]] = approvedPresaleContributorsAllocation[i];
         }
     }
 
@@ -173,7 +177,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
     /// @dev Called to iterate through phases and distribute tokens
     function claim() {
-        for (uint i = 1; i < currentPhase(); i++) {
+        for (uint i = 1; i <= currentPhase(); i++) {
             require(i <= 10);   // Max of 10 phases. Used to stop from infinitely looping through
             claimTokens(i);     // Calls claim function
         }
