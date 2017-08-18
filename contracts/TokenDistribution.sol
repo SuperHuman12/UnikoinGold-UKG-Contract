@@ -34,12 +34,10 @@ contract TokenDistribution is Ownable, StandardToken {
     string  public constant symbol = "UKG";
 
     // Constants
-    uint256 public constant EXP_18 = 18;                                          // Used to convert Wei to ETH
-    uint256 public constant UKG_FUND = 800 * (10**6) * 10**EXP_18;                // 800M UKG reserved for Unikrn use
-    uint256 public constant TOKEN_DIST_AMOUNT_SALE = 1 * (10**8) * 10**EXP_18;    // 100M tokens available from sale
-    uint256 public constant TOKEN_DIST_AMOUNT_PRESALE = 1 * (10**8) * 10**EXP_18; // 100M tokens available from presale
-    uint256 public constant TOKEN_CREATION_CAP =  1 * (10**9) * 10**EXP_18;       // 1B tokens created
-
+    uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
+    uint256 public constant UKG_FUND = 800 * (10**6) * 10**EXP_18;                     // 800M UKG reserved for Unikrn use
+    uint256 public constant TOKEN_DIST_AMOUNT_AFTER_SALE = 935 * (10**6) * 10**EXP_18; // 935M tokens distributed after sale distribution
+    uint256 public constant TOKEN_CREATION_CAP =  1 * (10**9) * 10**EXP_18;            // 1B tokens created
     // Secure wallets
     address public ukgDepositAddr;                   // Deposit address for UKG for Unikrn
 
@@ -97,10 +95,14 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param approvedSaleUsers Array of users
     /// @param approvedSaleUsersAllocation Array of users' allocation
     function distrubuteSaleTokens(address[] approvedSaleUsers, uint256[] approvedSaleUsersAllocation) onlyOwner notHeld {
-        require(block.timestamp < distributionStartTime);   // Addresses must be input prior to distribution
+        require(block.timestamp < distributionStartTime);           // Addresses must be input prior to distribution
 
         for (saleUsersIterator; saleUsersIterator < approvedSaleUsers.length; saleUsersIterator++) {
-            totalTokenSupply += approvedSaleUsersAllocation[saleUsersIterator];                                   // Adds tokens to total supply
+
+            uint tempTotalSupply  = totalTokenSupply.add(approvedSaleUsersAllocation[saleUsersIterator]);         // Temp total supply balance
+            require(tempTotalSupply <= TOKEN_DIST_AMOUNT_AFTER_SALE);                                             // Token distribution cannot exceed 935M tokens
+
+            totalTokenSupply = tempTotalSupply;                                                                   // Adds tokens to total supply
             balances[approvedSaleUsers[saleUsersIterator]] = approvedSaleUsersAllocation[saleUsersIterator];      // Distributes tokens to user
             CreateUKGEvent(approvedSaleUsers[saleUsersIterator], approvedSaleUsersAllocation[saleUsersIterator]); // Logs Unikrn fund
         }
@@ -110,11 +112,14 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param singleApprovedSaleUser User to input
     /// @param singleApprovedSaleUserAllocation User allocation
     function distrubuteSaleTokensIterate(address singleApprovedSaleUser,uint256 singleApprovedSaleUserAllocation) onlyOwner notHeld {
-        require(block.timestamp < distributionStartTime);                           // Addresses must be input prior to distribution
+        require(block.timestamp < distributionStartTime);                               // Addresses must be input prior to distribution
 
-        totalTokenSupply += singleApprovedSaleUserAllocation;                     // Adds tokens to total supply
-        balances[singleApprovedSaleUser] = singleApprovedSaleUserAllocation;      // Distributes tokens to user
-        CreateUKGEvent(singleApprovedSaleUser, singleApprovedSaleUserAllocation); // Logs Unikrn fund
+        uint tempTotalSupply  = totalTokenSupply.add(singleApprovedSaleUserAllocation); // Temp total supply balance
+        require(tempTotalSupply <= TOKEN_DIST_AMOUNT_AFTER_SALE);                       // Token distribution cannot exceed 935M tokens
+
+        totalTokenSupply = tempTotalSupply;                                             // Adds tokens to total supply
+        balances[singleApprovedSaleUser] = singleApprovedSaleUserAllocation;            // Distributes tokens to user
+        CreateUKGEvent(singleApprovedSaleUser, singleApprovedSaleUserAllocation);       // Logs Unikrn fund
     }
 
     /// @dev Allocates tokens to presale participants
