@@ -56,7 +56,7 @@ contract ParticipantAdditionProxy is Ownable {
             require(!presaleParticipantAllocated[approvedPresaleParticipants[i]]); // Participant's funds cannot have been allocated already
             // Removes ability to accidentally overwrite 
 
-            uint tempPresaleTotalSupply  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]); // Temp total supply balance
+            uint256 tempPresaleTotalSupply  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]); // Temp total supply balance
             require(tempPresaleTotalSupply <= PRESALE_TOKEN_ALLOCATION_CAP);       // Cannot allocate > 65M tokens
             presaleAllocationTokenCount = tempPresaleTotalSupply;                  // Add to presale total token allocations
 
@@ -78,7 +78,7 @@ contract ParticipantAdditionProxy is Ownable {
             // Removes ability to accidentally overwrite 
 
 
-            uint tempSaleTotalSupply  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]); // Temp total supply balance
+            uint256 tempSaleTotalSupply  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]); // Temp total supply balance
             require(tempSaleTotalSupply <= SALE_TOKEN_ALLOCATION_CAP);             // Cannot allocate > 135M tokens
             saleAllocationTokenCount = tempSaleTotalSupply;                        // Add to presale total token allocations
 
