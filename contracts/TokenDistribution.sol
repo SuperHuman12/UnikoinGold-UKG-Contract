@@ -38,12 +38,12 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
     uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
-    uint256 public constant ZYZ_FUND = 800 * (10**6) * 10**EXP_18;                     // 800M ZYZ reserved for Zyzz use
+    uint256 public constant UKG_FUND = 800 * (10**6) * 10**EXP_18;                     // 800M UKG reserved for Unikrn use
     uint256 public constant TOKEN_CREATION_CAP =  1 * (10**9) * 10**EXP_18;            // 1B tokens created
 
 
     // Secure wallets
-    address public zyzDepositAddr;                   // Deposit address for ZYZ for Zyzz
+    address public ukgDepositAddr;                   // Deposit address for UKG for Unikrn
 
     // Parameters
     bool    public onHold;                           // Place on hold if something goes awry
@@ -62,7 +62,7 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public distributionOverTimestamp;        // Distribution phase ends 4 months after the completion of the sale
 
     // Events
-    event CreateZYZEvent(address indexed _to, uint256 _value);    // Logs the creation of the token
+    event CreateUKGEvent(address indexed _to, uint256 _value);    // Logs the creation of the token
     event LogClaimEvent(uint phase, address user, uint amount);   // Logs the user claiming their tokens
 
     // Mapping
@@ -102,13 +102,13 @@ contract TokenDistribution is Ownable, StandardToken {
         _;
     }
     /// @dev TokenDistribution(): Constructor for the sale contract
-    /// @param _zyzDepositAddr Address to deposit pre-allocated ZYZ
+    /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
     /// @param _lockupDistributionStartTimestamp Start time of the lockup phases
     /// @param _distributionOverTimestamp End time of the distribution
     /// @param _proxyContractAddress Address of contract holding participant data
-    function TokenDistribution(address _zyzDepositAddr, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp, address _proxyContractAddress)
+    function TokenDistribution(address _ukgDepositAddr, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp, address _proxyContractAddress)
     {
-        require(_zyzDepositAddr != 0);                     // Force this value not to be initialized to 0
+        require(_ukgDepositAddr != 0);                     // Force this value not to be initialized to 0
         require(_lockupDistributionStartTimestamp != 0);   // Force this value not to be initialized to 0
         require(_distributionOverTimestamp != 0);          //    i.e. - bad deploy
         require(_proxyContractAddress != 0);               // Proxy contract must be defined
@@ -121,12 +121,12 @@ contract TokenDistribution is Ownable, StandardToken {
         presaleUserAdditionIterator = 0;                   // Presale user iterator initialized at 0
         proxyContractAddress = _proxyContractAddress;      // Address of contract holding participant data
         presaleAllocationTokenCount = 0;                   // No presale tokens accounted for upon contract creation
-        zyzDepositAddr = _zyzDepositAddr;                  // Deposit address for ZYZ for Zyzz
+        ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
         lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
         distributionOverTimestamp = _distributionOverTimestamp;
-        totalTokenSupply = ZYZ_FUND;                       // Total supply of ZYZ distributed so far, initialized with total supply amount
-        balances[zyzDepositAddr] = ZYZ_FUND;               // Deposit Zyzz funds that are preallocated to the Zyzz team
-        CreateZYZEvent(zyzDepositAddr, ZYZ_FUND);          // Logs Zyzz fund
+        totalTokenSupply = UKG_FUND;                       // Total supply of UKG distributed so far, initialized with total supply amount
+        balances[ukgDepositAddr] = UKG_FUND;               // Deposit Unikrn funds that are preallocated to the Unikrn team
+        CreateUKGEvent(ukgDepositAddr, UKG_FUND);          // Logs Unikrn fund
     }
 
     /// @dev allows user to collect their sale funds.
@@ -151,7 +151,7 @@ contract TokenDistribution is Ownable, StandardToken {
         saleParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
 
         balances[msg.sender] = currentParticipantAmt;      // Distributes tokens to participant
-        CreateZYZEvent(msg.sender, currentParticipantAmt); // Logs Unikrn fund
+        CreateUKGEvent(msg.sender, currentParticipantAmt); // Logs Unikrn fund
     }
 
     /// @dev Returns block timestamp. Function needed for testing.
@@ -229,10 +229,10 @@ contract TokenDistribution is Ownable, StandardToken {
 
         // ***NEED += in the event they got some tokens outside the contract. Need to check if += works w/ balance.
         balances[saleParticipantAddress] += currentParticipantAmt;  // Send funds to the participant
-        CreateZYZEvent(saleParticipantAddress, currentParticipantAmt); // Logs Unikrn fund
+        CreateUKGEvent(saleParticipantAddress, currentParticipantAmt); // Logs Unikrn fund
     }
 
-    /// @dev Send all remaining tokens to Zyzz to be distributed to the appropriate users
+    /// @dev Send all remaining tokens to Unikrn to be distributed to the appropriate users
     function finishPreDistribution()
     onlyOwner
     notHeld
@@ -242,8 +242,8 @@ contract TokenDistribution is Ownable, StandardToken {
     {
         uint256 remainingTokens = TOKEN_CREATION_CAP.sub(totalTokenSupply);   // The remaining tokens are calculated
         // ***NEED += in the event they got some tokens outside the contract. Need to check if += works w/ balance.
-        balances[zyzDepositAddr] += remainingTokens;                         // Deposit remaining funds to Zyzz team
-        CreateZYZEvent(zyzDepositAddr, remainingTokens);
+        balances[ukgDepositAddr] += remainingTokens;                         // Deposit remaining funds to Unikrn team
+        CreateUKGEvent(ukgDepositAddr, remainingTokens);
     }
 
     function () {
