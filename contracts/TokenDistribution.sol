@@ -27,8 +27,8 @@ import {StandardToken} from './Token.sol';
   */
 
 contract ParticipantAdditionProxy {
-    function balanceOfPresaleParticipants(address _owner) constant returns (uint256 balance) {}
-    function balanceOfSaleParticipants(address _owner) constant returns (uint256 balance) {}
+    function balanceOfPresaleParticipants(address) constant returns (uint256) {}
+    function balanceOfSaleParticipants(address) constant returns (uint256) {}
 }
 
 contract TokenDistribution is Ownable, StandardToken {
@@ -48,16 +48,13 @@ contract TokenDistribution is Ownable, StandardToken {
     // Parameters
     bool    public onHold;                           // Place on hold if something goes awry
     bool    public distributionFinalized;            // Denotes state of distribution
-
     uint256 public numPresaleTokensDistributed;      // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;         // Number of sale tokens that have been distributed
     uint256 public totalTokenSupply;                 // Total supply of tokens distributed so far
-    uint256 public saleUserAdditionIterator;         // Used to iterate through the addition of sale users
-    uint256 public presaleUserAdditionIterator;      // Used to iterate through the addition of presale users
-    uint256 public presaleAllocationTokenCount;      // Token count after presale allocation. Used to avoid assigning >1BN tokens
     address public proxyContractAddress;             // Address of contract holding participant data
 
     // Timing
+    uint256 public distributionStartTimestamp;       // Time to begin distribution
     uint256 public lockupDistributionStartTimestamp; // Block timestamp to start the lockup distribution counter
     uint256 public distributionOverTimestamp;        // Distribution phase ends 4 months after the completion of the sale
 
@@ -72,13 +69,14 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => bool) public saleParticipantCollected;                  // Sale user has collected all funds bool
     mapping (uint => mapping (address => bool))  public  claimed;               // Sets status of claim for presale participant
 
-
-    address[] public approvedSaleUsers;
-    uint256[] public approvedSaleUsersAllocation;
-
     // Modifiers
     modifier notHeld {
         require(!onHold);
+        _;
+    }
+
+    modifier distributionStarted {
+        require(distributionStartTimestamp < block.timestamp);
         _;
     }
 
@@ -103,10 +101,11 @@ contract TokenDistribution is Ownable, StandardToken {
     }
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
+    /// @param _distributionStartTimestamp Timestamp to begin the distribution phase
     /// @param _lockupDistributionStartTimestamp Start time of the lockup phases
     /// @param _distributionOverTimestamp End time of the distribution
     /// @param _proxyContractAddress Address of contract holding participant data
-    function TokenDistribution(address _ukgDepositAddr, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp, address _proxyContractAddress)
+    function TokenDistribution(address _ukgDepositAddr, uint256 _distributionStartTimestamp, uint256 _lockupDistributionStartTimestamp, uint256 _distributionOverTimestamp, address _proxyContractAddress)
     {
         require(_ukgDepositAddr != 0);                     // Force this value not to be initialized to 0
         require(_lockupDistributionStartTimestamp != 0);   // Force this value not to be initialized to 0
@@ -115,13 +114,11 @@ contract TokenDistribution is Ownable, StandardToken {
 
         onHold = false;                                    // Shut down if something goes awry
         distributionFinalized = false;                     // Denotes the end of the distribution phase
-        numPresaleTokensDistributed = 0;                    // No presale tokens distributed initially
-        numSaleTokensDistributed = 0;                       // No sale tokens distributed initially
-        saleUserAdditionIterator = 0;                      // Sale user iterator initialized at 0
-        presaleUserAdditionIterator = 0;                   // Presale user iterator initialized at 0
+        numPresaleTokensDistributed = 0;                   // No presale tokens distributed initially
+        numSaleTokensDistributed = 0;                      // No sale tokens distributed initially
         proxyContractAddress = _proxyContractAddress;      // Address of contract holding participant data
-        presaleAllocationTokenCount = 0;                   // No presale tokens accounted for upon contract creation
         ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
+        distributionStartTimestamp = _distributionStartTimestamp;
         lockupDistributionStartTimestamp = _lockupDistributionStartTimestamp;
         distributionOverTimestamp = _distributionOverTimestamp;
         totalTokenSupply = UKG_FUND;                       // Total supply of UKG distributed so far, initialized with total supply amount
@@ -130,12 +127,13 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev allows user to collect their sale funds.
-    function distrubuteSaleTokensProxy()
+    function distrubuteSaleTokens()
     notHeld
+    distributionStarted
     saleTokensStillAvailable
     totalTokensStillAvailable
     {
-        require(saleParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
+        require(!saleParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
 
         ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
 
@@ -150,8 +148,8 @@ contract TokenDistribution is Ownable, StandardToken {
         totalTokenSupply += currentParticipantAmt;          // Add to total token collection
         saleParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
 
-        balances[msg.sender] = currentParticipantAmt;      // Distributes tokens to participant
-        CreateUKGEvent(msg.sender, currentParticipantAmt); // Logs Unikrn fund
+        balances[msg.sender] += currentParticipantAmt;      // Distributes tokens to participant
+        CreateUKGEvent(msg.sender, currentParticipantAmt);  // Logs Unikrn fund
     }
 
     /// @dev Returns block timestamp. Function needed for testing.
@@ -174,29 +172,42 @@ contract TokenDistribution is Ownable, StandardToken {
 
     /// @dev Presale participants call this to claim their tokens.
     /// @param phase Defines which phase of the sale being collected for
-    function claimTokens(uint phase) internal {
+    /// @param finishingAddress Address used to finish distribution of presale tokens
+    /// @param finalizeDistribution Variable is true if called by contract creator
+    function claimTokens(uint phase, address finishingAddress, bool finalizeDistribution) internal {
         require(currentPhase() >= phase);
+
+        address participantAddress;    // Address to use throughout the claimTokens function
+
+        // If the function is called by the participant, use msg.sender
+        // If the function is called by the owner, use the passed in address
+        if (!finalizeDistribution) {
+            participantAddress = msg.sender;
+        } else {
+            participantAddress = finishingAddress;
+        }
 
         ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
 
         // If a participant has never called the function before, assign their allocations accordingly
-        if (!claimed[1][msg.sender]) {
-            presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
-            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);      // Calculates how many tokens collectible per phase
-            remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];  // Number of tokens to receive
+        if (!claimed[1][participantAddress]) {
+            presaleParticipantAllowedAllocation[participantAddress] = participantData.balanceOfPresaleParticipants(participantAddress); // Total allowed tokens. Used for division
+            allocationPerPhase[participantAddress] = presaleParticipantAllowedAllocation[participantAddress].div(10);      // Calculates how many tokens collectible per phase
+            remainingAllowance[participantAddress] = presaleParticipantAllowedAllocation[participantAddress];  // Number of tokens to receive
         }
 
-        if (claimed[phase][msg.sender] || remainingAllowance[msg.sender] == 0) {
+        // If the participant has claimed for this phase, return
+        if (claimed[phase][participantAddress] || remainingAllowance[participantAddress] == 0) {
             return;
         }
 
-        // Minimum contribution allowed will keep this out of float/double
-        claimed[phase][msg.sender] = true;                  // User cannot participate in this phase again
-        remainingAllowance[msg.sender] -= allocationPerPhase[msg.sender];  // Subtract the claimed tokens from the remaining allocation
+        claimed[phase][participantAddress] = true;                                         // User cannot participate in this phase again
+        remainingAllowance[participantAddress] -= allocationPerPhase[participantAddress];  // Subtract the claimed tokens from the remaining allocation
 
-        totalTokenSupply += allocationPerPhase[msg.sender];                // Add to the total number of presale tokens distributed
-        balances[msg.sender] += allocationPerPhase[msg.sender];             // Distribute tokens to user
-        LogClaimEvent(phase, msg.sender, allocationPerPhase[msg.sender]);  // Logs the user claiming their tokens
+        numPresaleTokensDistributed += allocationPerPhase[participantAddress];             // Add to the total number of presale tokens distributed
+        totalTokenSupply += allocationPerPhase[participantAddress];                        // Add to the total number of tokens distributed
+        balances[participantAddress] += allocationPerPhase[participantAddress];            // Distribute tokens to user
+        LogClaimEvent(phase, participantAddress, allocationPerPhase[participantAddress]);  // Logs the user claiming their tokens
     }
 
     /// @dev Called to iterate through phases and distribute tokens
@@ -204,12 +215,28 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @notice and their last at the start of phase 11
     function claim() external
     notHeld
+    distributionStarted
     presaleTokensStillAvailable
     totalTokensStillAvailable
     {
         for (uint i = 2; i <= currentPhase(); i++) {
-            require(i <= 11);   // Max of 10 phases. Used to stop from infinitely looping through
-            claimTokens(i);     // Calls claim function
+            require(i <= 11);   // Max of 11 phases. Used to stop from infinitely looping through
+            claimTokens(i, msg.sender, false);     // Calls claim function
+        }
+    }
+
+    /// @dev Send all remaining tokens to Unikrn to be distributed to the appropriate users
+    /// @param presaleParticipantAddress The address of the presale participants who has not collected funds
+    function finishPreDistribution(address presaleParticipantAddress)
+    onlyOwner
+    notHeld
+    presaleTokensStillAvailable
+    totalTokensStillAvailable
+    distributionOver
+    {
+        for (uint j = 2; j <= currentPhase(); j++) {
+            require(j <= 11); // Max of 11 phases. Used to stop from infinitely looping through
+            claimTokens(j, presaleParticipantAddress, true);    // Calls claim function
         }
     }
 
@@ -227,23 +254,8 @@ contract TokenDistribution is Ownable, StandardToken {
 
         require(currentParticipantAmt != 0);    // User cannot have collected nor have not participated in sale
 
-        // ***NEED += in the event they got some tokens outside the contract. Need to check if += works w/ balance.
-        balances[saleParticipantAddress] += currentParticipantAmt;  // Send funds to the participant
+        balances[saleParticipantAddress] += currentParticipantAmt;     // Send funds to the participant
         CreateUKGEvent(saleParticipantAddress, currentParticipantAmt); // Logs Unikrn fund
-    }
-
-    /// @dev Send all remaining tokens to Unikrn to be distributed to the appropriate users
-    function finishPreDistribution()
-    onlyOwner
-    notHeld
-    presaleTokensStillAvailable
-    totalTokensStillAvailable
-    distributionOver
-    {
-        uint256 remainingTokens = TOKEN_CREATION_CAP.sub(totalTokenSupply);   // The remaining tokens are calculated
-        // ***NEED += in the event they got some tokens outside the contract. Need to check if += works w/ balance.
-        balances[ukgDepositAddr] += remainingTokens;                         // Deposit remaining funds to Unikrn team
-        CreateUKGEvent(ukgDepositAddr, remainingTokens);
     }
 
     function () {
@@ -263,13 +275,35 @@ contract TokenDistribution is Ownable, StandardToken {
 
     /// @dev Changes distribution end timestamp
     /// @param _newTime Timestamp to change the distribution phase end
-    function changeDistributionEndBlock(uint _newTime)
+    function changeDistributionStartTimestamp(uint _newTime)
+    onlyOwner
+    notHeld
+    {
+        require(_newTime != 0);
+
+        distributionStartTimestamp = _newTime;
+    }
+
+    /// @dev Changes distribution end timestamp
+    /// @param _newTime Timestamp to change the distribution phase end
+    function changeDistributionEndTimestamp(uint _newTime)
     onlyOwner
     notHeld
     {
         require(_newTime != 0);
 
         distributionOverTimestamp = _newTime;
+    }
+
+    /// @dev Changes lockup distribution start timestamp
+    /// @param _newTime Timestamp to change the lockup distribution start time
+    function changelockupDistributionStartTimestamp(uint _newTime)
+    onlyOwner
+    notHeld
+    {
+        require(_newTime != 0);
+
+        lockupDistributionStartTimestamp = _newTime;
     }
 
     /*
@@ -283,3 +317,4 @@ contract TokenDistribution is Ownable, StandardToken {
         distributionFinalized = true;
     }
 }
+
