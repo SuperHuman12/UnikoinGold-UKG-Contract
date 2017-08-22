@@ -121,7 +121,7 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev allows user to collect their sale funds.
-    function claimSaleTokens()
+    function claimSaleTokens() external
     notCanceled
     distributionStarted
     saleTokensStillAvailable
