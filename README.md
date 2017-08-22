@@ -33,7 +33,7 @@ blockchain
     - These participants will have to call claimPresaleTokens() function to receive these tokens
             - IE if the user calls clam for the first time after 19 days, they will receive 20% of their tokens
         - This function will iterate through phases in claimPresaleTokensIterate() 
-        - The first phase to receive tokens is phase 2
+        - The first phase to receive tokens is phase 1
 - If something goes wrong, the owner can call of the contract 1 day before the distribution begins
 
 ## Contracts

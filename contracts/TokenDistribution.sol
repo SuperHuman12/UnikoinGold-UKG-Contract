@@ -121,7 +121,7 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev allows user to collect their sale funds.
-    function claimSaleTokens() external
+    function claimSaleTokens()
     notCanceled
     distributionStarted
     saleTokensStillAvailable
@@ -157,7 +157,7 @@ contract TokenDistribution is Ownable, StandardToken {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
         ? 0
-        : timestamp.sub(distributionStartTimestamp) / 9 days + 1;
+        : timestamp.sub(distributionStartTimestamp) / 9 days;
     }
 
     /// @dev Presale participants call this to claim their tokens.
@@ -168,10 +168,10 @@ contract TokenDistribution is Ownable, StandardToken {
         ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
 
         // If a participant has never called the function before, assign their allocations accordingly
-        if (!claimed[2][msg.sender]) {
+        if (!claimed[1][msg.sender]) {
             presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
             require(presaleParticipantAllowedAllocation[msg.sender] != 0);                              // User must have participated in the presale
-            modBal[msg.sender] = presaleParticipantAllowedAllocation[msg.sender] % 10;                  // Calculates how many extra tokens to distribute for first phase
+            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase
             allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase
             remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];           // Number of tokens to receive
         }
@@ -181,36 +181,33 @@ contract TokenDistribution is Ownable, StandardToken {
             return;
         }
 
-        claimed[phase][msg.sender] = true;                                 // User cannot participate in this phase again
+        claimed[phase][msg.sender] = true;                                      // User cannot participate in this phase again
 
-        // Distribute tokens. If it is the first iteration, add the mod
-        if (phase != 2) {
-            remainingAllowance[msg.sender] -= allocationPerPhase[msg.sender];       // Subtract the claimed tokens from the remaining allocation
+        // The first distribution phase will have the modulus added to it
+        uint256 phaseAllocation;  // Amount to distribute this phase
 
-            numPresaleTokensDistributed += allocationPerPhase[msg.sender];                     // Add to the total number of presale tokens distributed
-            assert(StandardToken(this).transfer(msg.sender, allocationPerPhase[msg.sender]));  // Distribute tokens to user
-            DistributePresaleUKGEvent(phase, msg.sender, allocationPerPhase[msg.sender]);      // Logs the user claiming their tokens
+        if (phase == 1) {
+            phaseAllocation = allocationPerPhase[msg.sender].add(modBal);       // Allocation plus mod for first phase
         } else {
-            uint256 phaseAllocation = allocationPerPhase[msg.sender].add(modBal[msg.sender]);    // Allocation plus mod
-            remainingAllowance[msg.sender] -= phaseAllocation;                  // Subtract the claimed tokens from the remaining allocation
-
-            numPresaleTokensDistributed += phaseAllocation;                     // Add to the total number of presale tokens distributed
-            assert(StandardToken(this).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
-            DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
+            phaseAllocation = allocationPerPhase[msg.sender];                   // Allocation
         }
+
+        remainingAllowance[msg.sender] -= phaseAllocation;                  // Subtract the claimed tokens from the remaining allocation
+
+        numPresaleTokensDistributed += phaseAllocation;                     // Add to the total number of presale tokens distributed
+        assert(StandardToken(this).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
+        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
     }
 
 
     /// @dev Called to iterate through phases and distribute tokens
-    /// @notice Phase 1 begins when the distribution phase ends. Users receive their first funds at the start of phase 2
-    /// @notice and their last at the start of phase 11
     function claimPresaleTokens() external
     notCanceled
     distributionStarted
     presaleTokensStillAvailable
     {
-        for (uint i = 2; i <= currentPhase(); i++) {
-            i > 11 ? i=11 : i;             // Max of 11 phases. Used to stop from infinitely looping through
+        for (uint i = 1; i <= currentPhase(); i++) {
+            i > 10 ? i=10 : i;             // Max of 10 phases. Used to stop from infinitely looping through
             claimPresaleTokensIterate(i);  // Calls claim function
         }
     }
@@ -226,6 +223,5 @@ contract TokenDistribution is Ownable, StandardToken {
     {
         cancelDistribution = true;
     }
-
 }
 
