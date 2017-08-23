@@ -45,7 +45,6 @@ contract TokenDistribution is Ownable, StandardToken {
     address public ukgDepositAddr;                   // Deposit address for UKG for Unikrn
 
     // Parameters
-    bool    public distributionFinalized;            // Denotes state of distribution
     bool    public cancelDistribution;               // Call off distribution if something goes wrong prior to token distribution
     uint256 public numPresaleTokensDistributed;      // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;         // Number of sale tokens that have been distributed
@@ -106,7 +105,6 @@ contract TokenDistribution is Ownable, StandardToken {
         require(_proxyContractAddress != 0);               // Proxy contract must be defined
 
         cancelDistribution = false;                        // Shut down if something goes awry
-        distributionFinalized = false;                     // Denotes the end of the distribution phase
         numPresaleTokensDistributed = 0;                   // No presale tokens distributed initially
         numSaleTokensDistributed = 0;                      // No sale tokens distributed initially
         ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
@@ -173,6 +171,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
             uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase
             allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase
+                                                                                                        // Minimum user contribution is $30, so everyone will receive > 10 tokens
             remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];           // Number of tokens to receive
         }
 

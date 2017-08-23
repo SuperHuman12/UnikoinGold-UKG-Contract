@@ -12,10 +12,13 @@ distribution of UKG.
 
 ## Assumptions
 
+### Sale Process
+- The sale will consist of users sending funds to specific addresses, prior to the audited smart contracts
+- Users can contribute a minimum of $30 USD and a maximum of $100k USD
 ### Participant Addition
 - This contract will collect no funds. All funds will have been collected prior to the deployment of this contract
 - Before the distribute contract is deployed, ParticipantAdditionProxy.sol will be deployed
-- Unikrn will populate allocatealePresaleBalances and allocateSaleBalances with address and balances of the 
+- Unikrn will populate allocatePresaleBalances and allocateSaleBalances with address and balances of the 
 participants who participated in the sale
 - Upon completion of the addition of users, Unikrn will call endPresaleParticipantAddition and endSaleParticipantAddition
 in order to finalize this contract. After these are called, this contract will never be edited again
