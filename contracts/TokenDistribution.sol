@@ -64,7 +64,6 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => uint256) public presaleParticipantAllowedAllocation;    // Presale participant able to claim tokens
     mapping (address => uint256) public allocationPerPhase;                     // Presale participant allocation per phase
     mapping (address => uint256) public remainingAllowance;                     // Amount of tokens presale participant has left to claim
-    mapping (address => uint256) public modBal;                                 // Modulo balance to add to first phase collection
     mapping (address => bool) public saleParticipantCollected;                  // Sale user has collected all funds bool
     mapping (uint => mapping (address => bool))  public  claimed;               // Sets status of claim for presale participant
 
@@ -165,12 +164,13 @@ contract TokenDistribution is Ownable, StandardToken {
     function claimPresaleTokensIterate(uint phase) internal {
         require(currentPhase() >= phase);
 
-        ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
-
         // If a participant has never called the function before, assign their allocations accordingly
         if (!claimed[1][msg.sender]) {
+            ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
             presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
+
             require(presaleParticipantAllowedAllocation[msg.sender] != 0);                              // User must have participated in the presale
+
             uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase
             allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase
             remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];           // Number of tokens to receive
@@ -186,17 +186,17 @@ contract TokenDistribution is Ownable, StandardToken {
         // The first distribution phase will have the modulus added to it
         uint256 phaseAllocation;  // Amount to distribute this phase
 
-        if (phase == 1) {
-            phaseAllocation = allocationPerPhase[msg.sender].add(modBal);       // Allocation plus mod for first phase
-        } else {
+        if (phase != 1) {
             phaseAllocation = allocationPerPhase[msg.sender];                   // Allocation
+        } else {
+            phaseAllocation = allocationPerPhase[msg.sender].add(modBal);       // Allocation plus mod for first phase
         }
 
-        remainingAllowance[msg.sender] -= phaseAllocation;                  // Subtract the claimed tokens from the remaining allocation
+        remainingAllowance[msg.sender] -= phaseAllocation;                      // Subtract the claimed tokens from the remaining allocation
+        numPresaleTokensDistributed += phaseAllocation;                         // Add to the total number of presale tokens distributed
 
-        numPresaleTokensDistributed += phaseAllocation;                     // Add to the total number of presale tokens distributed
-        assert(StandardToken(this).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
-        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
+        assert(StandardToken(this).transfer(msg.sender, phaseAllocation));      // Distribute tokens to user
+        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);          // Logs the user claiming their tokens
     }
 
 
