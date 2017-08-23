@@ -149,12 +149,16 @@ contract TokenDistribution is Ownable, StandardToken {
         return whichPhase(time());
     }
 
+    function min(uint a, uint b) private returns (uint) {
+        return a < b ? a : b;
+    }
+
     /// @dev Returns the current period the distribution is on. Will be 1-10. Updates every 9 days
     function whichPhase(uint timestamp) constant returns (uint) {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
         ? 0
-        : timestamp.sub(distributionStartTimestamp) / 9 days;
+        : min(timestamp.sub(distributionStartTimestamp) / 9 days, 10);  // Returns phase 1-10. If it is past phase 10, return 10
     }
 
     /// @dev Presale participants call this to claim their tokens.
@@ -171,7 +175,6 @@ contract TokenDistribution is Ownable, StandardToken {
 
             uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase
             allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase
-                                                                                                        // Minimum user contribution is $30, so everyone will receive > 10 tokens
             remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];           // Number of tokens to receive
         }
 
@@ -206,7 +209,6 @@ contract TokenDistribution is Ownable, StandardToken {
     presaleTokensStillAvailable
     {
         for (uint i = 1; i <= currentPhase(); i++) {
-            i > 10 ? i=10 : i;             // Max of 10 phases. Used to stop from infinitely looping through
             claimPresaleTokensIterate(i);  // Calls claim function
         }
     }
