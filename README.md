@@ -13,8 +13,9 @@ distribution of UKG.
 ## Assumptions
 
 ### Sale Process
-- The sale will consist of users sending funds to specific addresses, prior to the audited smart contracts
+- The sale will consist of users sending funds to specific addresses, prior to the use audited smart contracts
 - Users can contribute a minimum of $30 USD and a maximum of $100k USD
+
 ### Participant Addition
 - This contract will collect no funds. All funds will have been collected prior to the deployment of this contract
 - Before the distribute contract is deployed, ParticipantAdditionProxy.sol will be deployed
@@ -70,6 +71,7 @@ Name | Keywords | Description
 claimSaleTokens() | `external` `notCanceled` `distributionStarted` `saleTokensStillAvailable` | Distributes tokens to sale participants.
 time() | `constant` | Returns the block.timstamp. Necessary for testing.
 currentPhase() | `constant` | Returns the current phase number that the distribution is on.
+min() | `private` | Returns the mininum of two numbers.
 whichPhase() | `constant` | Calculates the phase number that the distribution is on.
 claimPresaleTokensIterate() | `internal` | Internal function that gets looped through based on when presale user calls claimPresaleTokens().
 claimPresaleTokens() | `external` `notCanceled` `distributionStarted` `presaleTokensStillAvailable` | User calls this function to claim their presale tokens.
