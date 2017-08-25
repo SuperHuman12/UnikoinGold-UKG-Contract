@@ -29,7 +29,7 @@ contract ERC20 is ERC20Basic {
  * @title Basic token
  * @dev Basic version of StandardToken, with no allowances.
  */
-contract BasicToken {
+contract BasicToken is ERC20Basic {
     using SafeMath for uint256;
 
     mapping(address => uint256) balances;
@@ -64,7 +64,7 @@ contract BasicToken {
  * @dev https://github.com/ethereum/EIPs/issues/20
  * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
-contract StandardToken is BasicToken {
+contract StandardToken is ERC20, BasicToken {
 
     mapping (address => mapping (address => uint256)) allowed;
 
