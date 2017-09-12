@@ -149,7 +149,7 @@ contract TokenDistribution is Ownable, StandardToken {
         return whichPhase(time());
     }
 
-    function min(uint a, uint b) private returns (uint) {
+    function min(uint a, uint b) constant returns (uint) {
         return a < b ? a : b;
     }
 
@@ -223,6 +223,9 @@ contract TokenDistribution is Ownable, StandardToken {
     notFrozen
     {
         cancelDistribution = true;
+    }
+    function balanceOf(address _owner) constant returns (uint256 balance) {
+        return balances[_owner];
     }
 }
 
