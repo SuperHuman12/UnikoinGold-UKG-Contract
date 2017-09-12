@@ -218,12 +218,13 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev Cancels contract if something is wrong prior to distribution
-    function cancelDistribution() external
+    function cancelDist() external
     onlyOwner
     notFrozen
     {
         cancelDistribution = true;
     }
+
     function balanceOf(address _owner) constant returns (uint256 balance) {
         return balances[_owner];
     }
