@@ -1,3 +1,4 @@
+var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 var TokenDistribution = artifacts.require("./TokenDistribution.sol");
 
 var BigNumber = require("bignumber.js");
@@ -13,7 +14,7 @@ const ethQuery = new EthQuery(new HttpProvider(`http://localhost:8545`));
 // TODO: ParticipantAdditionProx
 
 contract('TokenDistribution', function(accounts) {
-    const EXP18 = 18;
+    const EXP_18 = 18;
     const MINUTE = 60;
     const HOUR = 60 * MINUTE;
     const DAY = 24 * HOUR;
@@ -150,13 +151,13 @@ contract('TokenDistribution', function(accounts) {
         it("Should initiate Unikrn account with 800M UKG", async () => {
             let token = await TokenDistribution.deployed();
             const balance = await token.balanceOf.call(accounts[0]);
-            assert.equal(balance.valueOf(), 800 * 10**6 * 10**EXP18, "800M UKG wasn't in the first account.");
+            assert.equal(balance.valueOf(), 800 * 10**6 * 10**EXP_18, "800M UKG wasn't in the first account.");
         });
 
         it("Should initiate the contract with 200M UKG", async () => {
             let token = await TokenDistribution.deployed();
             const balance = await token.balanceOf.call(token.address);
-            assert.equal(balance.valueOf(), 200 * 10**6 * 10**EXP18, "800M UKG wasn't in the first account.");
+            assert.equal(balance.valueOf(), 200 * 10**6 * 10**EXP_18, "800M UKG wasn't in the first account.");
         });
     });
 
@@ -164,14 +165,53 @@ contract('TokenDistribution', function(accounts) {
     // claimSaleToken //
     ///////////////////
     /*
-    1. Should not work if sale is cancelled
-    2. Should not work if distribution hasn't started
-    3. Should not work if tokens are all distributed
-    4. Should not work if user has already collected funds
-    5. Should not work if all 135M tokens have been distributed
-    6. numSaleTokensDistributed should update with user's allocation
-    6. Should distribute tokens to the user
+    1.✔Should allow user to collect their funds
+    2.✔Should throw if a user has already collected their funds
+    3.✔numSaleTokensDistributed should update with user's allocation
      */
+
+    describe("claimSaleToken", () => {
+        it("Should allow users to claim their funds from the sale", async () => {
+            let proxy = await ParticipantAdditionProxy.new();
+            let token = await TokenDistribution.new(OWNER, proxy.address, now-10, now-5);
+            const ACCT1 = accounts[1];
+
+            await proxy.allocateSaleBalances([ACCT1], [1]);
+            await token.claimSaleTokens({from:ACCT1});
+
+            const balance = await token.balanceOf.call(ACCT1);
+            assert.equal(balance.valueOf(), 1, "DIDN'T WORK.");
+        });
+
+        it("Should throw because the user has already collected their funds", async () => {
+            let proxy = await ParticipantAdditionProxy.new();
+            let token = await TokenDistribution.new(OWNER, proxy.address, now-10, now-5);
+            const ACCT1 = accounts[1];
+
+            await proxy.allocateSaleBalances([ACCT1], [1]);
+            await token.claimSaleTokens({from:ACCT1});
+
+            try {
+                await token.claimSaleTokens({from:ACCT1});
+            } catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+        });
+
+        it("Should throw if all 135M tokens have been distributed", async () => {
+            let proxy = await ParticipantAdditionProxy.new();
+            let token = await TokenDistribution.new(OWNER, proxy.address, now-10, now-5);
+            const ACCT1 = accounts[1];
+            const VAL = 1;
+
+            await proxy.allocateSaleBalances([ACCT1], [VAL]);
+            await token.claimSaleTokens({from:ACCT1});
+
+            let numSaleTokensDistributed = await token.numSaleTokensDistributed.call();
+            assert.equal(numSaleTokensDistributed.valueOf(), VAL, "DIDN'T WORK.");
+        });
+    });
 
     // it("should fail because function does not exist on contract", async function () {
     //     let token = await TokenDistribution.deployed();
@@ -437,11 +477,9 @@ contract('TokenDistribution', function(accounts) {
     // claimPresaleTokens //
     ///////////////////////
     /*
-    1. Should not work if distirbution is canceled
-    2. Should not work if the distribution has not started
-    3. Should not work if there are no more presale tokens available
-    4. Should never loop more than 10 times
-    5. i should never be > 10
+    1. Should not work if there are no more presale tokens available
+    2. Should never loop more than 10 times
+    3. i should never be > 10
     */
 
     /////////////////
@@ -487,7 +525,7 @@ contract('TokenDistribution', function(accounts) {
 
         context("notCanceled", async () => {
 
-            it("Should thow claimSaleTokens() with notCanceled modifier", async () => {
+            it("Should throw claimSaleTokens() with notCanceled modifier", async () => {
                 let token = await TokenDistribution.deployed();
                 let snapshot_val = await takeSnapshot();
                 await token.cancelDist({from:accounts[0]});
@@ -500,7 +538,7 @@ contract('TokenDistribution', function(accounts) {
                 assert.fail("The function executed when it should not have.")
             });
 
-            it("Should thow claimPresaleTokens() with notCanceled modifier", async () => {
+            it("Should throw claimPresaleTokens() with notCanceled modifier", async () => {
                 let token = await TokenDistribution.deployed();
                 let snapshot_val = await takeSnapshot();
                 await token.cancelDist({from:accounts[0]});
@@ -516,7 +554,7 @@ contract('TokenDistribution', function(accounts) {
 
         context("notFrozen", async () => {
 
-            it("Should thow cancelDist() with notFrozen modifier", async () => {
+            it("Should throw cancelDist() with notFrozen modifier", async () => {
                 const newFreeze = now - 10;
                 const newDist = now + 100;
 
@@ -532,15 +570,9 @@ contract('TokenDistribution', function(accounts) {
             });
         });
 
-        // modifier distributionStarted {
-        //     require(distributionStartTimestamp < block.timestamp);
-        //     _;
-        // }
-
-
         context("distributionStarted", async () => {
 
-            it("Should thow claimSaleTokens() with distributionStarted modifier", async () => {
+            it("Should throw claimSaleTokens() with distributionStarted modifier", async () => {
                 const newFreeze = now - 10;
                 const newDist = now + 5;
 
@@ -553,7 +585,7 @@ contract('TokenDistribution', function(accounts) {
                 assert.fail("The function executed when it should not have.")
             });
 
-            it("Should thow claimPresaleTokens() with distributionStarted modifier", async () => {
+            it("Should throw claimPresaleTokens() with distributionStarted modifier", async () => {
                 const newFreeze = now - 10;
                 const newDist = now + 5;
 
@@ -567,6 +599,48 @@ contract('TokenDistribution', function(accounts) {
             });
         });
 
-    });
+        context("saleTokensStillAvailable", async () => {
 
+            it("Should throw claimSaleTokens() with saleTokensStillAvailable modifier", async () => {
+                let proxy = await ParticipantAdditionProxy.new();
+                let token = await TokenDistribution.new(OWNER, proxy.address, now-10, now-5);
+                const ACCT1 = accounts[1];
+                const ACCT2 = accounts[2];
+
+                await proxy.allocateSaleBalances([ACCT1], [135 * (10**6) * 10**EXP_18]);
+                await token.claimSaleTokens({from:ACCT1});
+
+                try {
+                    await token.claimSaleTokens({from:ACCT2});
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+        });
+
+        context("presaleTokensStillAvailable", async () => {
+
+            it("Should throw claimPresaleTokens() with saleTokensStillAvailable modifier", async () => {
+                let proxy = await ParticipantAdditionProxy.new();
+                let token = await TokenDistribution.new(OWNER, proxy.address, now - 10, now - 5);
+                const ACCT1 = accounts[1];
+                const ACCT2 = accounts[2];
+
+                // Need to push presale forward a 90+ days in order to get to the last phase
+                await increaseTime(YEAR);
+                await mine();
+
+                await proxy.allocatePresaleBalances([ACCT1], [65 * (10 ** 6) * 10 ** EXP_18]);
+                await token.claimPresaleTokens({from: ACCT1});
+
+                try {
+                    await token.claimPresaleTokens({from: ACCT2});
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+        });
+    });
 });
