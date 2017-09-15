@@ -1,16 +1,6 @@
 var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 var TokenDistribution = artifacts.require("./TokenDistribution.sol");
 
-const HttpProvider = require(`ethjs-provider-http`);
-const EthRPC = require(`ethjs-rpc`);
-const EthQuery = require(`ethjs-query`);
-
-const ethRPC = new EthRPC(new HttpProvider(`http://localhost:8545`));
-const ethQuery = new EthQuery(new HttpProvider(`http://localhost:8545`));
-
-// TODO: Get rid of balanceOf function from main contract
-// TODO: ParticipantAdditionProx
-
 contract('TokenDistribution', function(accounts) {
     const EXP_18 = 18;
     const MINUTE = 60;
@@ -92,16 +82,11 @@ contract('TokenDistribution', function(accounts) {
             });
         });
     };
+
     // Fast forward time for tests
     const increaseTime= async (by) => {
         await evmTimeChange(by);
         now += by;
-    };
-
-    // Rewind time after tests
-    const decreaseTime = async (by) => {
-        await evmTimeChange(by);
-        now -= by;
     };
 
     // Get block timestamp
@@ -121,6 +106,7 @@ contract('TokenDistribution', function(accounts) {
     6.✔this contract should have 200M UKG
      */
     describe("initialization - COMPLETE", () => {
+
         it("Should not allow ukgDepositAddress to be initialized to 0", async () => {
             let token = await TokenDistribution.deployed();
             const addr = await token.ukgDepositAddr.call();
@@ -169,6 +155,7 @@ contract('TokenDistribution', function(accounts) {
      */
 
     describe("claimSaleToken", () => {
+
         it("Should allow users to claim their funds from the sale", async () => {
             let proxy = await ParticipantAdditionProxy.new();
             let token = await TokenDistribution.new(OWNER, proxy.address, now-10, now-5);
@@ -219,6 +206,7 @@ contract('TokenDistribution', function(accounts) {
      */
 
     describe("time - COMPLETE", () => {
+
         it("Should return the current timestamp", async () => {
             let token = await TokenDistribution.deployed();
             let status = await token.time.call();
@@ -234,6 +222,7 @@ contract('TokenDistribution', function(accounts) {
      */
 
     describe("currentPhase - COMPLETE", () => {
+
         it("Should return phase 0 upon contract deployment", async () => {
             let token = await TokenDistribution.deployed();
             const phase = await token.currentPhase.call();
@@ -249,6 +238,7 @@ contract('TokenDistribution', function(accounts) {
      */
 
     describe("min - COMPLETE", () => {
+
         it("Should return minimum of two inputs", async () => {
             const small_num=50;
             const large_num=100;
@@ -288,6 +278,7 @@ contract('TokenDistribution', function(accounts) {
      */
 
     describe("whichPhase - COMPLETE", () => {
+
         it("Should return phase 0, as this is upon contract creation", async () => {
             let token = await TokenDistribution.deployed();
             let phase = await token.whichPhase.call(now);
@@ -440,6 +431,7 @@ contract('TokenDistribution', function(accounts) {
     14. Should distribute tokens to the user
      */
     describe("claimPresaleTokensIterate", () => {
+
         it("Should only be callable internally", async () => {
             let token = await TokenDistribution.deployed();
             try {
@@ -464,7 +456,7 @@ contract('TokenDistribution', function(accounts) {
     //
     //         assert.equal(balance.valueOf(), VAL, "Not the right phase");
     //     });
-    // });
+    });
 
     /////////////////////////
     // claimPresaleTokens //
@@ -480,6 +472,7 @@ contract('TokenDistribution', function(accounts) {
     1.✔Should change cancelDistribution to `true` if executed correctly (reverts back after test)
      */
     describe("cancelDist - COMPLETE", () => {
+
         it("Should change cancelDistribution to true if executed correctly", async () => {
             let token = await TokenDistribution.deployed();
             let snapshot_val = await takeSnapshot();
@@ -634,5 +627,4 @@ contract('TokenDistribution', function(accounts) {
             });
         });
     });
-});
 });
