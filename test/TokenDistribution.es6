@@ -1,8 +1,6 @@
 var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 var TokenDistribution = artifacts.require("./TokenDistribution.sol");
 
-var BigNumber = require("bignumber.js");
-
 const HttpProvider = require(`ethjs-provider-http`);
 const EthRPC = require(`ethjs-rpc`);
 const EthQuery = require(`ethjs-query`);
@@ -212,36 +210,6 @@ contract('TokenDistribution', function(accounts) {
             assert.equal(numSaleTokensDistributed.valueOf(), VAL, "DIDN'T WORK.");
         });
     });
-
-    // it("should fail because function does not exist on contract", async function () {
-    //     let token = await TokenDistribution.deployed();
-    //
-    //     let result = await token.cancelDist({from: accounts[0]});
-    //     // console.log(result);
-    //
-    //     let distributionStartTimestamp = await token.distributionStartTimestamp.call(function(err, res) {
-    //                                            document.getElementById('amt').innerText = res;});
-    //
-    //     console.log(distributionStartTimestamp)
-    //
-    //     try {
-    //         await token.claimSaleToken.call();
-    //     } catch (e) {
-    //         return true;
-    //     }
-    //     throw new Error("I should never see this!")
-    // });
-    //
-    // it("Should not allow distributionStartTimestamp to be initialized to 0", async () => {
-    //     return TokenDistribution.deployed().then(function(instance) {
-    //         distributionStartTimestamp = instance.distributionStartTimestamp.call(function(err, res){
-    //             document.getElementById('amt').innerText = res;
-    //         });
-    //         return distributionStartTimestamp
-    //     }).then(function(num) {
-    //         assert.notEqual(num.valueOf(), 0, "distributionStartTimestamp was not initialized");
-    //     });
-    // });
 
     ///////////
     // time //
@@ -457,8 +425,7 @@ contract('TokenDistribution', function(accounts) {
     // claimPresaleTokensIterate //
     //////////////////////////////
     /*
-    1. Should only be callable internally
-    2. Should only loop if the current phase is greater than the phase passed into the function by claimPresaleTokens
+    1.✔Should only be callable internally
     3. Should pull participant data from proxy contract on 1st iteration
     4. Should not pull participant data from proxy contract after 1st iteration
     5. Should not work if user didn't participate in the presale
@@ -472,14 +439,38 @@ contract('TokenDistribution', function(accounts) {
     13. Should add the phaseAllocation to the numPresaleTokensDistributed
     14. Should distribute tokens to the user
      */
+    describe("claimPresaleTokensIterate", () => {
+        it("Should only be callable internally", async () => {
+            let token = await TokenDistribution.deployed();
+            try {
+                await token.claimPresaleTokensIterate();
+            } catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+
+        });
+
+    //     it("Should pull participant data from proxy contract on 1st iteration", async () => {
+    //         let proxy = await ParticipantAdditionProxy.new();
+    //         let token = await TokenDistribution.new(OWNER, proxy.address, now - 10, now - 5);
+    //         const ACCT1 = accounts[1];
+    //         const VAL = 1000000;
+    //
+    //         await proxy.allocatePresaleBalances([ACCT1], [VAL]);
+    //         await token.claimPresaleTokens({from: ACCT1});
+    //
+    //         let balance = await token.remainingAllowance[ACCT1].call();
+    //
+    //         assert.equal(balance.valueOf(), VAL, "Not the right phase");
+    //     });
+    // });
 
     /////////////////////////
     // claimPresaleTokens //
     ///////////////////////
     /*
-    1. Should not work if there are no more presale tokens available
-    2. Should never loop more than 10 times
-    3. i should never be > 10
+    1. i should never be > 10
     */
 
     /////////////////
@@ -643,4 +634,5 @@ contract('TokenDistribution', function(accounts) {
             });
         });
     });
+});
 });

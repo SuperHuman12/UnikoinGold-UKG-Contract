@@ -3,7 +3,8 @@ build/
 contracts/Migrations.sol
 .idea
 node_modules/
-
+.node-xmlhttprequest-sync-*
+local_history.patch
 *~
 
 # temporary files which can be created if a process still has a handle open of a deleted file
