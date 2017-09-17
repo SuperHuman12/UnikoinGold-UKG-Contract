@@ -18,9 +18,6 @@ contract('TokenDistribution', function(accounts) {
     const ACCOUNT2 = accounts[2];
     const PROXY_ADDRESS = accounts[9];
 
-    const FREEZE_TIMESTAMP = now + 5;
-    const DISTRIBUTION_START_TIMESTAMP = now + 10;
-
     const evmTimeChange = (time) => {
         return new Promise((resolve, reject) => {
             web3.currentProvider.sendAsync({
@@ -110,38 +107,38 @@ contract('TokenDistribution', function(accounts) {
     describe("initialization - COMPLETE", () => {
 
         it("Should not allow ukgDepositAddress to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.ukgDepositAddr.call();
             assert.notEqual(addr, 0, "ukgDepositAddr was not initialized.");
         });
 
         it("Should not allow distributionStartTimestamp to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.distributionStartTimestamp.call();
             assert.notEqual(addr, 0, "distributionStartTimestamp was not initialized.");
         });
 
         it("Should not allow freezeTimestamp to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.freezeTimestamp.call();
 
             assert.notEqual(addr.valueOf(), 0, "freezeTimestamp was not initialized.");
         });
 
         it("Should not allow proxyContractAddress to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.proxyContractAddress.call();
             assert.notEqual(addr, accounts[0], "proxyContractAddress was not initialized.");
         });
 
         it("Should initiate Unikrn account with 800M UKG", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const balance = await token.balanceOf.call(accounts[0]);
             assert.equal(balance.valueOf(), 800 * 10**6 * 10**EXP_18, "800M UKG wasn't in the first account.");
         });
 
         it("Should initiate the contract with 200M UKG", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const balance = await token.balanceOf.call(token.address);
             assert.equal(balance.valueOf(), 200 * 10**6 * 10**EXP_18, "800M UKG wasn't in the first account.");
         });
@@ -222,7 +219,7 @@ contract('TokenDistribution', function(accounts) {
     describe("currentPhase - COMPLETE", () => {
 
         it("Should return phase 0 upon contract deployment", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.currentPhase.call();
             assert.equal(phase.valueOf(), 0, "Not the right phase.");
         });
@@ -241,7 +238,7 @@ contract('TokenDistribution', function(accounts) {
             const small_num=50;
             const large_num=100;
 
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const result = await token.min.call(small_num, large_num);
             assert.equal(result.valueOf(), small_num, 'Did not return minimum.');
         });
@@ -278,133 +275,133 @@ contract('TokenDistribution', function(accounts) {
     describe("whichPhase - COMPLETE", () => {
 
         it("Should return phase 0, as this is upon contract creation", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now);
             assert.equal(phase.valueOf(), 0, "Not the right phase");
         });
 
         it("Should return phase 0 on day 9 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 9 * DAY - HOUR);
             assert.equal(phase.valueOf(), 0, "Not the right phase");
         });
 
         it("Should return phase 1 on day 9 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 9 * DAY + HOUR);
             assert.equal(phase.valueOf(), 1, "Not the right phase");
         });
 
         it("Should return phase 1 on day 18 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 18 * DAY - HOUR);
             assert.equal(phase.valueOf(), 1, "Not the right phase");
         });
 
         it("Should return phase 2 on day 18 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 18 * DAY + HOUR);
             assert.equal(phase.valueOf(), 2, "Not the right phase");
         });
 
         it("Should return phase 2 on day 27 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 27 * DAY - HOUR);
             assert.equal(phase.valueOf(), 2, "Not the right phase");
         });
 
         it("Should return phase 3 on day 27 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 27 * DAY + HOUR);
             assert.equal(phase.valueOf(), 3, "Not the right phase");
         });
 
         it("Should return phase 3 on day 36 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 36 * DAY - HOUR);
             assert.equal(phase.valueOf(), 3, "Not the right phase");
         });
 
         it("Should return phase 4 on day 36 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 36 * DAY + HOUR);
             assert.equal(phase.valueOf(), 4, "Not the right phase");
         });
 
         it("Should return phase 4 on day 45 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 45 * DAY - HOUR);
             assert.equal(phase.valueOf(), 4, "Not the right phase");
         });
 
         it("Should return phase 5 on day 45 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 45 * DAY +  HOUR);
             assert.equal(phase.valueOf(), 5, "Not the right phase");
         });
 
         it("Should return phase 5 on day 54 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 54 * DAY - HOUR);
             assert.equal(phase.valueOf(), 5, "Not the right phase");
         });
 
         it("Should return phase 6 on day 54 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 54 * DAY + HOUR);
             assert.equal(phase.valueOf(), 6, "Not the right phase");
         });
 
         it("Should return phase 6 on day 63 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 63 * DAY - HOUR);
             assert.equal(phase.valueOf(), 6, "Not the right phase");
         });
 
         it("Should return phase 7 on day 63 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 63 * DAY + HOUR);
             assert.equal(phase.valueOf(), 7, "Not the right phase");
         });
 
         it("Should return phase 7 on day 72 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 72 * DAY - HOUR);
             assert.equal(phase.valueOf(), 7, "Not the right phase");
         });
 
         it("Should return phase 8 on day 72 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 72 * DAY + HOUR);
             assert.equal(phase.valueOf(), 8, "Not the right phase");
         });
 
         it("Should return phase 8 on day 81 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 81 * DAY - HOUR);
             assert.equal(phase.valueOf(), 8, "Not the right phase");
         });
 
         it("Should return phase 9 on day 81 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 81 * DAY + HOUR);
             assert.equal(phase.valueOf(), 9, "Not the right phase");
         });
 
         it("Should return phase 9 on day 90 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 90 * DAY - HOUR);
             assert.equal(phase.valueOf(), 9, "Not the right phase");
         });
 
         it("Should return phase 10 on day 90 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 90 * DAY + HOUR);
             assert.equal(phase.valueOf(), 10, "Not the right phase");
         });
 
         it("Should return phase 10, as the function returns 10 at any point after 90 days", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + YEAR);
             assert.equal(phase.valueOf(), 10, "Not the right phase");
         });
@@ -415,22 +412,23 @@ contract('TokenDistribution', function(accounts) {
     //////////////////////////////
     /*
     1.✔Should only be callable internally
-    3.✔Should pull participant data from proxy contract on 1st iteration
-    5.✔Should not work if user didn't participate in the presale
-    6.✔Should calculate allocationPerPhase as 10% of their total allocation
-    8. Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
-    9. Should return to claimPresaleTokens function if the user has no additional funds allocated
-    10. Should add the modulo to the allocation on the first phase
-    11. Should not allocate the modulo balance to the remainder of phases
-    12. Should subtract the phaseAllocation from the participant's remainingAllownace
-    13. Should add the phaseAllocation to the numPresaleTokensDistributed
-    14. Should distribute tokens to the user
+    2.✔Should pull participant data from proxy contract on 1st iteration
+    3.✔Should not work if user didn't participate in the presale
+    4.✔Should calculate allocationPerPhase as 10% of their total allocation
+    5.✔Should add the modulo to the allocation on the first phase
+    5.✔Should not add the modulo to the allocation after the first phase
+    6. Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
+    7. Should return to claimPresaleTokens function if the user has no additional funds allocated
+    8. Should not allocate the modulo balance to the remainder of phases
+    9. Should subtract the phaseAllocation from the participant's remainingAllownace
+    10. Should add the phaseAllocation to the numPresaleTokensDistributed
+    11. Should distribute tokens to the user
      */
 
     describe("claimPresaleTokensIterate", () => {
 
         it("Should only be callable internally", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             try {
                 await token.claimPresaleTokensIterate();
             } catch (e) {
@@ -442,7 +440,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should pull participant data from proxy contract on 1st iteration", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP - 5);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000000;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -459,7 +457,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should throw if the usser did not participate in the presale", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP - 5);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
 
             const VAL = 1000000;
 
@@ -480,7 +478,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should calculate allocationPerPhase as 10% of their total allocation", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP - 5);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000000;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -493,6 +491,40 @@ contract('TokenDistribution', function(accounts) {
             const balance = await token.allocationPerPhaseOf.call(ACCOUNT1);
 
             assert.equal(balance.valueOf(), VAL/10, "Not the correct value");
+        });
+
+        it("Should add the modulo to the allocation on the first phase", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now -5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const balance = await token.balanceOf.call(ACCOUNT1);
+
+            assert.equal(balance.valueOf(), Math.floor(VAL/10) + VAL%10, "Not the correct value");
+        });
+
+        it("Should not add the modulo to the allocation after the first phase", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 20);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const balance = await token.balanceOf.call(ACCOUNT1);
+
+            assert.equal(balance.valueOf(), Math.floor(VAL/10) + Math.floor(VAL/10) + VAL%10, "Not the correct value");
         });
 
     });
@@ -535,7 +567,7 @@ contract('TokenDistribution', function(accounts) {
         context("onlyOwner", async () => {
 
             it("Should throw if not called by the owner", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP, DISTRIBUTION_START_TIMESTAMP);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
                 try {
                     await token.cancelDist({from: accounts[1]});
                 } catch (e) {
@@ -573,7 +605,7 @@ contract('TokenDistribution', function(accounts) {
         context("notFrozen", async () => {
 
             it("Should throw cancelDist() with notFrozen modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now - 5);
                 try {
                     await token.cancelDist({from:accounts[0]});
                 } catch (e) {
@@ -586,7 +618,7 @@ contract('TokenDistribution', function(accounts) {
         context("distributionStarted", async () => {
 
             it("Should throw claimSaleTokens() with distributionStarted modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now + 5);
                 try {
                     await token.claimSaleTokens.call();
                 } catch (e) {
@@ -596,7 +628,7 @@ contract('TokenDistribution', function(accounts) {
             });
 
             it("Should throw claimPresaleTokens() with distributionStarted modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now + 5);
                 try {
                     await token.claimPresaleTokens.call();
                 } catch (e) {
@@ -610,7 +642,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimSaleTokens() with saleTokensStillAvailable modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
-                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP - 10);
+                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now);
 
                 await proxy.allocateSaleBalances([ACCOUNT1], [135 * (10**6) * 10**EXP_18]);
                 await token.claimSaleTokens({from:ACCOUNT1});
@@ -628,7 +660,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimPresaleTokens() with saleTokensStillAvailable modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
-                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, FREEZE_TIMESTAMP - 15, DISTRIBUTION_START_TIMESTAMP - 10);
+                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now);
 
                 // Need to push presale forward a 90+ days in order to get to the last phase
                 await increaseTime(YEAR);
