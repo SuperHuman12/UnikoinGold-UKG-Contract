@@ -228,5 +228,22 @@ contract TokenDistribution is Ownable, StandardToken {
     function balanceOf(address _owner) constant returns (uint256 balance) {
         return balances[_owner];
     }
+
+    // FOR TESTING ONLY
+    function presaleParticipantAllowedAllocationOf(address _owner) constant returns (uint256 balance) {
+        return presaleParticipantAllowedAllocation[_owner];
+    }
+
+    function allocationPerPhaseOf(address _owner) constant returns (uint256 balance) {
+        return allocationPerPhase[_owner];
+    }
+
+    function remainingAllowanceOf(address _owner) constant returns (uint256 balance) {
+        return remainingAllowance[_owner];
+    }
+
+    function saleParticipantCollectedOf(address _owner) constant returns (bool balance) {
+        return saleParticipantCollected[_owner];
+    }
 }
 
