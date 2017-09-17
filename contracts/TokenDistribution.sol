@@ -26,7 +26,7 @@ import {StandardToken} from './Token.sol';
   *
   */
 
-contract ParticipantAdditionProxy {
+contract ProxyContract {
     function balanceOfPresaleParticipants(address) constant returns (uint256) {}
     function balanceOfSaleParticipants(address) constant returns (uint256) {}
 }
@@ -125,7 +125,7 @@ contract TokenDistribution is Ownable, StandardToken {
     {
         require(!saleParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
 
-        ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
+        ProxyContract participantData = ProxyContract(proxyContractAddress);
 
         uint256 currentParticipantAmt = participantData.balanceOfSaleParticipants(msg.sender);  // Number of tokens to receive
         uint256 tempSaleTotalSupply  = numSaleTokensDistributed.add(currentParticipantAmt);     // Temp number of sale tokens distributed
@@ -168,7 +168,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
         // If a participant has never called the function before, assign their allocations accordingly
         if (!claimed[1][msg.sender]) {
-            ParticipantAdditionProxy participantData = ParticipantAdditionProxy(proxyContractAddress);
+            ProxyContract participantData = ProxyContract(proxyContractAddress);
             presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
 
             require(presaleParticipantAllowedAllocation[msg.sender] != 0);                              // User must have participated in the presale

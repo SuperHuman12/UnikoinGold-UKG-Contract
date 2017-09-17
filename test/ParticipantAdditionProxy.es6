@@ -1,6 +1,6 @@
-var ParticipantAddition = artifacts.require("./ParticipantAddition.sol");
+var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 
-contract('ParticipantAddition', function(accounts) {
+contract('ParticipantAdditionProxy', function(accounts) {
     const EXP_18 = 18;
     const MINUTE = 60;
     const HOUR = 60 * MINUTE;
@@ -16,7 +16,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should give 100 presale users 1 Token Each, one at a time", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     for (var i = 0; i < 100; i++) {
                         await token.allocatePresaleBalances([accounts[i]], [1]);
                     }
@@ -31,7 +31,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should give a presale user the entire allocation and compare to PRESALE_TOKEN_ALLOCATION_CAP", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocatePresaleBalances([accounts[2]], [65 * (10**6) * 10**EXP_18]);
 
                     const total_dist = await token.presaleAllocationTokenCount.call();
@@ -49,7 +49,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should not allow presale user to be input twice", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocatePresaleBalances([accounts[0]], [1]);
                     try {
                         await token.allocatePresaleBalances([accounts[0]], [2]);
@@ -64,7 +64,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should not allow presale collection to go over PRESALE_TOKEN_ALLOCATION_CAP", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocatePresaleBalances([accounts[2]], [64 * (10**6) * 10**EXP_18]);
 
                     try {
@@ -86,7 +86,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should give 100 sale users 1 Token Each, one at a time", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     for (var i = 0; i < 100; i++) {
                         // console.log(accounts[i]);
                         await token.allocateSaleBalances([accounts[i]], [1]);
@@ -101,7 +101,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should give a sale user the entire allocation and compare to SALE_TOKEN_ALLOCATION_CAP", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocateSaleBalances([accounts[2]], [135 * (10**6) * 10**EXP_18]);
 
                     const total_dist = await token.saleAllocationTokenCount.call();
@@ -118,7 +118,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should not allow sale user to be input twice", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                         await token.allocateSaleBalances([accounts[0]], [1]);
                         try {
                             await token.allocateSaleBalances([accounts[0]], [2]);
@@ -133,7 +133,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should not allow sale collection to go over PRESALE_TOKEN_ALLOCATION_CAP", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocateSaleBalances([accounts[2]], [134 * (10**6) * 10**EXP_18]);
 
                     try {
@@ -149,12 +149,12 @@ contract('ParticipantAddition', function(accounts) {
         });
     });
 
-    describe("endPresaleParticipantAddition", () => {
+    describe("endPresaleParticipantAdditionProxy", () => {
 
         context("Closing the presale", async () => {
             try {
                 it("Should set presaleAdditionDone to true when all tokens have been collected", async () => {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocatePresaleBalances([accounts[2]], [65 * (10 ** 6) * 10 ** EXP_18]);
                     await token.endPresaleParticipantAddition();
 
@@ -170,7 +170,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should not allow the presale to close before all fund have been added", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocatePresaleBalances([accounts[2]], [1]);
                     try {
                         await token.endPresaleParticipantAddition();
@@ -185,13 +185,13 @@ contract('ParticipantAddition', function(accounts) {
         });
     });
 
-    describe("endSaleParticipantAddition", () => {
+    describe("endSaleParticipantAdditionProxy", () => {
 
         context("Closing the sale", async () => {
 
             it("Should set saleAdditionDone to true when all tokens have been collected", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocateSaleBalances([accounts[2]], [135 * (10**6) * 10**EXP_18]);
                     await token.endSaleParticipantAddition();
 
@@ -205,7 +205,7 @@ contract('ParticipantAddition', function(accounts) {
 
             it("Should not allow the sale to close before all fund have been added", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocateSaleBalances([accounts[2]], [1]);
                     try {
                         await token.endSaleParticipantAddition();
@@ -225,10 +225,10 @@ contract('ParticipantAddition', function(accounts) {
     //////////////
 
     describe("modifiers", () => {
-        context("presaleParticipantAdditionOngoing", async () => {
+        context("presaleParticipantAdditionProxyOngoing", async () => {
             it("Should set presaleAdditionDone to true when all tokens have been collected", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocatePresaleBalances([accounts[2]], [65 * (10**6) * 10**EXP_18]);
                     await token.endPresaleParticipantAddition();
 
@@ -244,10 +244,10 @@ contract('ParticipantAddition', function(accounts) {
             });
         });
 
-        context("saleParticipantAdditionOngoing", async () => {
+        context("saleParticipantAdditionProxyOngoing", async () => {
             it("Should set saleAdditionDone to true when all tokens have been collected", async () => {
                 try {
-                    let token = await ParticipantAddition.new();
+                    let token = await ParticipantAdditionProxy.new();
                     await token.allocateSaleBalances([accounts[2]], [135 * (10**6) * 10**EXP_18]);
                     await token.endSaleParticipantAddition();
 
