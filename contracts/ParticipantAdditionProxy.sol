@@ -3,7 +3,7 @@ pragma solidity ^0.4.11;
 import {SafeMath} from './SafeMath.sol';
 import {Ownable} from './Ownable.sol';
 
-contract ParticipantAdditionProxy is Ownable {
+contract ParticipantAddition is Ownable {
     using SafeMath for uint;
 
     // Constants
@@ -35,8 +35,8 @@ contract ParticipantAdditionProxy is Ownable {
         _;
     }
 
-    /// @dev ParticipantAdditionProxy(): Constructor for the participant addition contract
-    function ParticipantAdditionProxy()
+    /// @dev ParticipantAddition(): Constructor for the participant addition contract
+    function ParticipantAddition()
     {
         saleAdditionDone = false;          // Sale participants not yet added
         presaleAdditionDone = false;       // Presale participants not yet added
