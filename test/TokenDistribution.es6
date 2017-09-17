@@ -419,10 +419,9 @@ contract('TokenDistribution', function(accounts) {
     5.✔Should not add the modulo to the allocation after the first phase
     6. Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
     7. Should return to claimPresaleTokens function if the user has no additional funds allocated
-    8. Should not allocate the modulo balance to the remainder of phases
-    9. Should subtract the phaseAllocation from the participant's remainingAllownace
-    10. Should add the phaseAllocation to the numPresaleTokensDistributed
-    11. Should distribute tokens to the user
+    9.✔Should subtract the phaseAllocation from the participant's remainingAllownace
+    10.✔Should add the phaseAllocation to the numPresaleTokensDistributed
+    11.✔Should distribute the entire balance of tokens to a user after the 10th phase
      */
 
     describe("claimPresaleTokensIterate", () => {
@@ -517,7 +516,7 @@ contract('TokenDistribution', function(accounts) {
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
 
-            // Need to get into phase 1
+            // Need to get into phase 2
             await increaseTime(DAY * 20);
             await mine();
 
@@ -527,6 +526,56 @@ contract('TokenDistribution', function(accounts) {
             assert.equal(balance.valueOf(), Math.floor(VAL/10) + Math.floor(VAL/10) + VAL%10, "Not the correct value");
         });
 
+        it("Should subtract the phaseAllocation from the participant's remainingAllownace", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const balance = await token.remainingAllowance.call(ACCOUNT1);
+
+            assert.equal(balance.valueOf(), VAL - (Math.floor(VAL/10) + VAL%10), "Not the correct value");
+        });
+
+        it("Should add the phaseAllocation to the numPresaleTokensDistributed", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const balance = await token.numPresaleTokensDistributed.call();
+
+            assert.equal(balance.valueOf(), Math.floor(VAL/10) + VAL%10, "Not the correct value");
+        });
+
+        it.only("Should distribute the entire balance of tokens to a user after the 10th phase", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 90);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const balance = await token.numPresaleTokensDistributed.call();
+
+            assert.equal(balance.valueOf(), VAL, "Not the correct value");
+        });
     });
 
     /////////////////////////
@@ -642,7 +691,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimSaleTokens() with saleTokensStillAvailable modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
-                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now);
+                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
 
                 await proxy.allocateSaleBalances([ACCOUNT1], [135 * (10**6) * 10**EXP_18]);
                 await token.claimSaleTokens({from:ACCOUNT1});
@@ -660,7 +709,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimPresaleTokens() with saleTokensStillAvailable modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
-                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now);
+                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
 
                 // Need to push presale forward a 90+ days in order to get to the last phase
                 await increaseTime(YEAR);
