@@ -97,7 +97,7 @@ contract('TokenDistribution', function(accounts) {
     // initialization //
     ///////////////////
     /*
-    1.ukgDepositAddress shouldn't be 0
+    1.✔ukgDepositAddress shouldn't be 0
     2.✔distributionStartTimestamp shouldn't be 0
     3.✔freezeTimestamp shouldn't be 0
     4.✔proxyContractAddress shouldn't be 0
@@ -128,12 +128,12 @@ contract('TokenDistribution', function(accounts) {
         it("Should not allow proxyContractAddress to be initialized to 0", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.proxyContractAddress.call();
-            assert.notEqual(addr, accounts[0], "proxyContractAddress was not initialized.");
+            assert.notEqual(addr, ACCOUNT0, "proxyContractAddress was not initialized.");
         });
 
         it("Should initiate Unikrn account with 800M UKG", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
-            const balance = await token.balanceOf.call(accounts[0]);
+            const balance = await token.balanceOf.call(ACCOUNT0);
             assert.equal(balance.valueOf(), 800 * 10**6 * 10**EXP_18, "800M UKG wasn't in the first account.");
         });
 
@@ -416,12 +416,11 @@ contract('TokenDistribution', function(accounts) {
     3.✔Should not work if user didn't participate in the presale
     4.✔Should calculate allocationPerPhase as 10% of their total allocation
     5.✔Should add the modulo to the allocation on the first phase
-    5.✔Should not add the modulo to the allocation after the first phase
-    6. Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
-    7. Should return to claimPresaleTokens function if the user has no additional funds allocated
-    9.✔Should subtract the phaseAllocation from the participant's remainingAllownace
-    10.✔Should add the phaseAllocation to the numPresaleTokensDistributed
-    11.✔Should distribute the entire balance of tokens to a user after the 10th phase
+    6.✔Should not add the modulo to the allocation after the first phase
+    7.✔Should subtract the phaseAllocation from the participant's remainingAllownace
+    8.✔Should add the phaseAllocation to the numPresaleTokensDistributed
+    9.✔Should distribute the entire balance of tokens to a user after the 10th phase
+    10.✔Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
      */
 
     describe("claimPresaleTokensIterate", () => {
@@ -560,14 +559,14 @@ contract('TokenDistribution', function(accounts) {
             assert.equal(balance.valueOf(), Math.floor(VAL/10) + VAL%10, "Not the correct value");
         });
 
-        it.only("Should distribute the entire balance of tokens to a user after the 10th phase", async () => {
+        it("Should distribute the entire balance of tokens to a user after the 10th phase", async () => {
             const proxy = await ParticipantAdditionProxy.new();
             const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
 
-            // Need to get into phase 1
+            // Need to get into phase 10
             await increaseTime(DAY * 90);
             await mine();
 
@@ -576,14 +575,31 @@ contract('TokenDistribution', function(accounts) {
 
             assert.equal(balance.valueOf(), VAL, "Not the correct value");
         });
-    });
 
-    /////////////////////////
-    // claimPresaleTokens //
-    ///////////////////////
-    /*
-    1. i should never be > 10
-    */
+        it("Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+
+            // Need to get into phase 2
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+
+            const balance = await token.balanceOf.call(ACCOUNT1);
+
+            assert.equal(balance.valueOf(), 200, "Not the correct value");
+        });
+    });
 
     /////////////////
     // cancelDist //
@@ -605,11 +621,13 @@ contract('TokenDistribution', function(accounts) {
     ////////////////
     // modifiers //
     //////////////
-    // 1.✔notFrozen
-    // 2.✔notCanceled
-    // 3.✔distributionStarted
-    // 4.✔presaleTokensStillAvailable
-    // 5.✔saleTokensStillAvailable
+    /*
+    1.✔notFrozen
+    2.✔notCanceled
+    3.✔distributionStarted
+    4.✔presaleTokensStillAvailable
+    5.✔saleTokensStillAvailable
+    */
 
     describe("modifiers", () => {
 
@@ -618,7 +636,7 @@ contract('TokenDistribution', function(accounts) {
             it("Should throw if not called by the owner", async () => {
                 const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
                 try {
-                    await token.cancelDist({from: accounts[1]});
+                    await token.cancelDist({from: ACCOUNT1});
                 } catch (e) {
                     return true;
                 }
@@ -641,7 +659,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimPresaleTokens() with notCanceled modifier", async () => {
                 const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000);
-                await token.cancelDist({from:accounts[0]});
+                await token.cancelDist({from:ACCOUNT0});
                 try {
                     await token.claimPresaleTokens.call();
                 } catch (e) {
@@ -656,7 +674,7 @@ contract('TokenDistribution', function(accounts) {
             it("Should throw cancelDist() with notFrozen modifier", async () => {
                 const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now - 5);
                 try {
-                    await token.cancelDist({from:accounts[0]});
+                    await token.cancelDist({from:ACCOUNT0});
                 } catch (e) {
                     return true;
                 }
