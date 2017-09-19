@@ -13,30 +13,34 @@ distribution of UKG.
 ## Assumptions
 
 ### Sale Process
-- The sale will consist of users sending funds to specific addresses, prior to the use audited smart contracts
+- The sale will consist of users sending funds to specific wallet addresses, prior to the use audited smart contracts
+- Their contribution amount will be added to a DB consisting of wallet addresses and their associated balances
 - Users can contribute a minimum of $30 USD and a maximum of $100k USD
 
 ### Participant Addition
-- This contract will collect no funds. All funds will have been collected prior to the deployment of this contract
+- **This contract will collect no funds**. All funds will have been collected prior to the deployment of this contract
 - Before the distribute contract is deployed, ParticipantAdditionProxy.sol will be deployed
 - Unikrn will populate allocatePresaleBalances and allocateSaleBalances with address and balances of the 
-participants who participated in the sale
+participants who participated in the presale and the sale
+    - This will be done programmatically with a script that adds users and their balances via multiple transactions
+        - The function has the ability to accept as many or as few addresses per transaction, as to avoid the block
+        gas limit
 - Upon completion of the addition of users, Unikrn will call endPresaleParticipantAddition and endSaleParticipantAddition
 in order to finalize this contract. After these are called, this contract will never be edited again
 
 ### Participant Claim 
-- This contract will collect no funds. All funds will have been collected prior to the deployment of this contract
+- **This contract will collect no funds**. All funds will have been collected prior to the deployment of this contract
 - 200 million total tokens distributed between presale and sale participants
     - These tokens are initially sent to the contract in order to create all 1B tokens
         - This is done because if a participant were to lose their key, there would never be 1B tokens created
 - Both sale and presale participants will have their balances checked by the proxy contract that is already on the
 blockchain
-- Sale participants will receive their tokens immediately upon claiming them
+- Sale participants will receive their tokens immediately upon calling a function to claim them
 - Presale participants will receive their tokens at a rate of 10% every 9 days over a total of 90 days
     - A call to the claim function will give them all their available tokens, to date
-    - These participants will have to call claimPresaleTokens() function to receive these tokens
+    - These participants will have to call `claimPresaleTokens` function to receive these tokens
             - IE if the user calls clam for the first time after 19 days, they will receive 20% of their tokens
-        - This function will iterate through phases in claimPresaleTokensIterate() 
+        - This function will iterate through phases in `claimPresaleTokensIterate` 
         - The first phase to receive tokens is phase 1
 - If something goes wrong, the owner can call of the contract 1 day before the distribution begins
 
