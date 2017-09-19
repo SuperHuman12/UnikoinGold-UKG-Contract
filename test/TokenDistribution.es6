@@ -1,6 +1,9 @@
 var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 var TokenDistribution = artifacts.require("./TokenDistribution.sol");
 
+const time = require('./helpers/evmChangeTime.es6');
+const mine = require('./helpers/evmMine.es6');
+
 contract('TokenDistribution', function(accounts) {
     const EXP_18 = 18;
     const MINUTE = 60;
@@ -8,90 +11,21 @@ contract('TokenDistribution', function(accounts) {
     const DAY = 24 * HOUR;
     const YEAR = 365 * DAY;
 
-    now = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
     // Get block timestamp
     beforeEach(async () => {
         now = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
     });
+
     const ACCOUNT0 = accounts[0];
     const ACCOUNT1 = accounts[1];
     const ACCOUNT2 = accounts[2];
     const PROXY_ADDRESS = accounts[9];
 
-    const evmTimeChange = (time) => {
-        return new Promise((resolve, reject) => {
-            web3.currentProvider.sendAsync({
-                jsonrpc: '2.0',
-                method: 'evm_increaseTime',
-                params: [time], // Time increase param.
-                id: new Date().getTime()
-            }, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-
-                resolve();
-            });
-        });
-    };
-
-    const takeSnapshot = () => {
-        return new Promise((resolve, reject) => {
-            web3.currentProvider.sendAsync({
-                jsonrpc: '2.0',
-                method: 'evm_snapshot',
-                params: [],
-                id: new Date().getTime()
-            }, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-
-                resolve(result.result);
-            });
-        });
-    };
-
-    const revertToSnapshot = (snapShotId) => {
-        return new Promise((resolve, reject) => {
-            web3.currentProvider.sendAsync({
-                jsonrpc: '2.0',
-                method: 'evm_revert',
-                params: [snapShotId],
-                id: new Date().getTime()
-            }, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-
-                resolve();
-            });
-        });
-    };
-
-    const mine = () => {
-        return new Promise((resolve, reject) => {
-            web3.currentProvider.sendAsync({
-                jsonrpc: '2.0',
-                method: 'evm_mine',
-                params: [],
-                id: new Date().getTime()
-            }, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-
-                resolve();
-            });
-        });
-    };
-
     // Fast forward time for tests
     const increaseTime= async (by) => {
-        await evmTimeChange(by);
+        await time(by);
         now += by;
     };
-
 
     /////////////////////
     // initialization //
