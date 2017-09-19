@@ -35,7 +35,8 @@ contract TokenDistribution is Ownable, StandardToken {
     using SafeMath for uint;
 
     // Constants
-    uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
+    uint256 public constant EXP_18 = 18;                            // Used to convert Wei to ETH
+    uint256 public constant PERIOD_LENGTH = 9 days;
     uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
     uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**EXP_18;   // 200M tokens to be distributed to community
@@ -158,7 +159,7 @@ contract TokenDistribution is Ownable, StandardToken {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
         ? 0
-        : min(timestamp.sub(distributionStartTimestamp) / 9 days, 10);  // Returns phase 1-10. If it is past phase 10, return 10
+        : min(timestamp.sub(distributionStartTimestamp) / PERIOD_LENGTH, 10);  // Returns phase 1-10. If it is past phase 10, return 10
     }
 
     /// @dev Presale participants call this to claim their tokens.
