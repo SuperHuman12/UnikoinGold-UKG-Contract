@@ -35,8 +35,8 @@ contract TokenDistribution is Ownable, StandardToken {
     using SafeMath for uint;
 
     // Constants
-    uint256 public constant EXP_18 = 18;                            // Used to convert Wei to ETH
-    uint256 public constant PERIOD_LENGTH = 9 days;
+    uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
+    uint256 public constant PHASE_LENGTH = 9 days;                                     // Length of the phase
     uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
     uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**EXP_18;   // 200M tokens to be distributed to community
@@ -65,7 +65,12 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => uint256) public allocationPerPhase;                     // Presale participant allocation per phase
     mapping (address => uint256) public remainingAllowance;                     // Amount of tokens presale participant has left to claim
     mapping (address => bool) public saleParticipantCollected;                  // Sale user has collected all funds bool
+    mapping (address => uint256) public isVesting;                              // 0 if the user is currently vesting. 1 if they are finished.
+    mapping (address => uint256) public phasesClaimed;                          // Number of claimed phases
+    mapping (address => uint256) public phasesClaimable;                        // Number of phases the user can claim
     mapping (uint => mapping (address => bool))  public  claimed;               // Sets status of claim for presale participant
+
+    mapping (uint256 => uint256) public endOfPhaseTimestamp;    // Presale participant able to claim tokens
 
     // Modifiers
     modifier notFrozen {
@@ -116,6 +121,11 @@ contract TokenDistribution is Ownable, StandardToken {
         CreateUKGEvent(this, TOTAL_COMMUNITY_ALLOCATION);  // Logs token creation
         balances[ukgDepositAddr] = UKG_FUND;               // Deposit Unikrn funds that are preallocated to the Unikrn team
         CreateUKGEvent(ukgDepositAddr, UKG_FUND);          // Logs Unikrn fund
+        endOfPhaseTimestamp[0] = _distributionStartTimestamp + PHASE_LENGTH;    // Defines the ending timestamp of phase 0
+        // Defines the ending timestamp of the rest of the phases
+        for (uint i = 1; i <= 10; i++) {
+            endOfPhaseTimestamp[i] = ((i + 1) *PHASE_LENGTH) + _distributionStartTimestamp;
+        }
     }
 
     /// @dev allows user to collect their sale funds.
@@ -154,12 +164,20 @@ contract TokenDistribution is Ownable, StandardToken {
         return a < b ? a : b;
     }
 
-    /// @dev Returns the current period the distribution is on. Will be 1-10. Updates every 9 days
+    /// @dev Returns the current phase the distribution is on. Will be 1-10. Updates every 9 days
     function whichPhase(uint timestamp) constant returns (uint) {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
         ? 0
-        : min(timestamp.sub(distributionStartTimestamp) / PERIOD_LENGTH, 10);  // Returns phase 1-10. If it is past phase 10, return 10
+        : min(timestamp.sub(distributionStartTimestamp) / PHASE_LENGTH, 10);  // Returns phase 1-10. If it is past phase 10, return 10
+    }
+
+    function timeRemainingInPhase() constant returns (uint) {
+        return endOfPhaseTimestamp[currentPhase()] - time();
+    }
+
+    function phasesClaimable(address participant) constant returns (uint) {
+        return currentPhase().sub(phasesClaimed[participant]);
     }
 
     /// @dev Presale participants call this to claim their tokens.
@@ -198,13 +216,21 @@ contract TokenDistribution is Ownable, StandardToken {
         remainingAllowance[msg.sender] -= phaseAllocation;                      // Subtract the claimed tokens from the remaining allocation
         numPresaleTokensDistributed += phaseAllocation;                         // Add to the total number of presale tokens distributed
 
+        // If this is the last phase, isVesting flag turns to 1 (aka false)
+        if (phase == 10) {
+            isVesting[msg.sender] = 1;
+        }
+
+        // Define user statistics for web3 use
+        phasesClaimed[msg.sender] = phase;
+
         assert(StandardToken(this).transfer(msg.sender, phaseAllocation));      // Distribute tokens to user
         DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);          // Logs the user claiming their tokens
     }
 
 
     /// @dev Called to iterate through phases and distribute tokens
-    function claimPresaleTokens() external
+    function claimPresaleTokens()
     notCanceled
     distributionStarted
     presaleTokensStillAvailable
@@ -218,6 +244,14 @@ contract TokenDistribution is Ownable, StandardToken {
         revert();
     }
 
+    function claimAllAvailableTokens()
+    notCanceled
+    distributionStarted
+    {
+        claimSaleTokens();
+        claimPresaleTokens();
+    }
+
     /// @dev Cancels contract if something is wrong prior to distribution
     function cancelDist() external
     onlyOwner
@@ -226,25 +260,28 @@ contract TokenDistribution is Ownable, StandardToken {
         cancelDistribution = true;
     }
 
+    // FOR TESTING ONLY
     function balanceOf(address _owner) constant returns (uint256 balance) {
         return balances[_owner];
     }
 
-    // FOR TESTING ONLY
-    function presaleParticipantAllowedAllocationOf(address _owner) constant returns (uint256 balance) {
-        return presaleParticipantAllowedAllocation[_owner];
+    function presaleParticipantAllowedAllocationTest(address _participant) constant returns (uint256 allocation) {
+        return presaleParticipantAllowedAllocation[_participant];
     }
 
-    function allocationPerPhaseOf(address _owner) constant returns (uint256 balance) {
-        return allocationPerPhase[_owner];
+    function allocationPerPhaseTest(address _participant) constant returns (uint256 allocation) {
+        return allocationPerPhase[_participant];
     }
 
-    function remainingAllowanceOf(address _owner) constant returns (uint256 balance) {
-        return remainingAllowance[_owner];
+    function remainingAllowanceTest(address _participant) constant returns (uint256 allowance) {
+        return remainingAllowance[_participant];
     }
 
-    function saleParticipantCollectedOf(address _owner) constant returns (bool balance) {
-        return saleParticipantCollected[_owner];
+    function saleParticipantCollectedTest(address _participant) constant returns (bool collected) {
+        return saleParticipantCollected[_participant];
+    }
+
+    function isVestingTest(address _participant) constant returns (uint256 vesting) {
+        return isVesting[_participant];
     }
 }
-
