@@ -160,6 +160,7 @@ contract TokenDistribution is Ownable, StandardToken {
         return whichPhase(time());
     }
 
+    /// @dev Returns the mininum of two numbers
     function min(uint a, uint b) constant returns (uint) {
         return a < b ? a : b;
     }
@@ -172,10 +173,12 @@ contract TokenDistribution is Ownable, StandardToken {
         : min(timestamp.sub(distributionStartTimestamp) / PHASE_LENGTH, 10);  // Returns phase 1-10. If it is past phase 10, return 10
     }
 
+    /// @dev Returns the time remaining in the current phase
     function timeRemainingInPhase() constant returns (uint) {
         return endOfPhaseTimestamp[currentPhase()] - time();
     }
 
+    /// @dev Returns the number of phases a participant has available to claim
     function phasesClaimable(address participant) constant returns (uint) {
         return currentPhase().sub(phasesClaimed[participant]);
     }
@@ -244,6 +247,7 @@ contract TokenDistribution is Ownable, StandardToken {
         revert();
     }
 
+    /// @dev Function to call that allows user to claim both sale and presale tokens available at the current time
     function claimAllAvailableTokens()
     notCanceled
     distributionStarted
