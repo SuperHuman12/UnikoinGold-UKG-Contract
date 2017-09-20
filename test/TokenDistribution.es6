@@ -38,12 +38,13 @@ contract('TokenDistribution', function(accounts) {
     5.✔UKG_FUND should have 800M UKG
     6.✔this contract should have 200M UKG
      */
-    describe("initialization - COMPLETE", () => {
 
-        it("Should not allow ukgDepositAddress to be initialized to 0", async () => {
+    describe("initialization", () => {
+
+        it("Should not allow distributionStartTimestamp to be initialized to 0", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.ukgDepositAddr.call();
-            assert.notEqual(addr, 0, "ukgDepositAddr was not initialized.");
+            assert.notEqual(addr, 0, "distributionStartTimestamp was not initialized.");
         });
 
         it("Should not allow distributionStartTimestamp to be initialized to 0", async () => {
@@ -134,7 +135,7 @@ contract('TokenDistribution', function(accounts) {
     1.✔Should return current block.timestamp
      */
 
-    describe("time - COMPLETE", () => {
+    describe("time", () => {
 
         it("Should return the current timestamp", async () => {
             const token = await TokenDistribution.deployed(); // Used deployed because deoploying a new contact takes too long to deploy and causes this test to fail
@@ -150,7 +151,7 @@ contract('TokenDistribution', function(accounts) {
     1.✔Should return which phase the contract is in
      */
 
-    describe("currentPhase - COMPLETE", () => {
+    describe("currentPhase", () => {
 
         it("Should return phase 0 upon contract deployment", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
@@ -166,7 +167,7 @@ contract('TokenDistribution', function(accounts) {
     1.✔Should return the minimum of two inputs
      */
 
-    describe("min - COMPLETE", () => {
+    describe("min", () => {
 
         it("Should return minimum of two inputs", async () => {
             const small_num=50;
@@ -206,7 +207,7 @@ contract('TokenDistribution', function(accounts) {
     22.✔Should return 10 on any point past phase 10
      */
 
-    describe("whichPhase - COMPLETE", () => {
+    describe("whichPhase", () => {
 
         it("Should return phase 0, as this is upon contract creation", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
@@ -341,6 +342,89 @@ contract('TokenDistribution', function(accounts) {
         });
     });
 
+    ////////////////
+    // nextPhase //
+    //////////////
+    /*
+    1.✔Should return the remaining time in phase 0
+    2.✔Should return the remaining time in other phases
+     */
+    describe("nextPhase", () => {
+
+
+        it("Should return the remaining time in phase 0", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now, now);
+            var shouldBe1 = 9 * DAY;
+
+            let remainingTime1 = await token.timeRemainingInPhase.call();
+            assert.closeTo(Number(remainingTime1.valueOf()), shouldBe1, 5, "Not the correct value");
+
+            // Fast Forward 5 minutes
+            await increaseTime(5 * MINUTE);
+            await mine();
+
+            let remainingTime2 = await token.timeRemainingInPhase.call();
+
+            assert.closeTo(Number(remainingTime2.valueOf()), shouldBe1 - (5 * MINUTE), 5, "Not the correct value");
+        });
+
+        it("Should return the remaining time in other phases", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now, now);
+            const shouldBe1 = (27 * DAY) - (20 * DAY);
+            const shouldBe2 = (45 * DAY) - (40 * DAY);
+
+            //Fast Forward to Phase 2
+            await increaseTime(20 * DAY);
+            await mine();
+
+            let remainingTime1 = await token.timeRemainingInPhase.call();
+
+            assert.closeTo(Number(remainingTime1).valueOf(), shouldBe1, 5, "Not the correct value");
+
+            //Fast Forward to Phase 4
+            await increaseTime(20 * DAY);
+            await mine();
+
+            let remainingTime2 = await token.timeRemainingInPhase.call();
+
+            assert.closeTo(Number(remainingTime2.valueOf()), shouldBe2, 5, "Not the correct value");
+        });
+    });
+    //////////////////////
+    // phasesClaimable //
+    ////////////////////
+    /*
+    1.✔Should return the number of phases a user still has to claim
+     */
+    describe("phasesClaimable", () => {
+
+        it("Should return the number of phases a user still has to claim", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            let phasesRemaining1 = await token.phasesClaimable.call(ACCOUNT1);
+            assert.equal(phasesRemaining1.valueOf(), 0, "Not the correct value");
+
+            // Need to get into phase 3
+            await increaseTime(DAY * 30);
+            await mine();
+
+            let phasesRemaining2 = await token.phasesClaimable.call(ACCOUNT1);
+            assert.equal(phasesRemaining2.valueOf(), 3, "Not the correct value");
+
+            // Claim tokens. Should reset phasesClaimable to 0
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            let phasesRemaining3 = await token.phasesClaimable.call(ACCOUNT1);
+            assert.equal(phasesRemaining3.valueOf(), 0, "Not the correct value");
+
+        });
+    });
+
     ////////////////////////////////
     // claimPresaleTokensIterate //
     //////////////////////////////
@@ -355,6 +439,8 @@ contract('TokenDistribution', function(accounts) {
     8.✔Should add the phaseAllocation to the numPresaleTokensDistributed
     9.✔Should distribute the entire balance of tokens to a user after the 10th phase
     10.✔Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
+    11.✔Should return isVesting = 0 until a user has claimed for 10 phases
+    12.✔Should return the number of phases that have been collected by the user
      */
 
     describe("claimPresaleTokensIterate", () => {
@@ -382,7 +468,7 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const balance = await token.presaleParticipantAllowedAllocationOf.call(ACCOUNT1);
+            const balance = await token.presaleParticipantAllowedAllocationTest.call(ACCOUNT1);
 
             assert.equal(balance.valueOf(), VAL, "Not the correct value");
         });
@@ -420,7 +506,7 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const balance = await token.allocationPerPhaseOf.call(ACCOUNT1);
+            const balance = await token.allocationPerPhaseTest.call(ACCOUNT1);
 
             assert.equal(balance.valueOf(), VAL/10, "Not the correct value");
         });
@@ -533,8 +619,96 @@ contract('TokenDistribution', function(accounts) {
 
             assert.equal(balance.valueOf(), 200, "Not the correct value");
         });
+
+        it("Should return isVesting = 0 until a user has claimed for 10 phases", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000001;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const isVesting0 = await token.isVestingTest.call(ACCOUNT1);
+
+            assert.equal(isVesting0.valueOf(), 0, "Not the correct value");
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const isVesting1 = await token.isVestingTest.call(ACCOUNT1);
+
+            assert.equal(isVesting1.valueOf(), 0, "Not the correct value");
+
+            // Need to get into phase 10
+            await increaseTime(DAY * 90);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const isVesting2 = await token.isVestingTest.call(ACCOUNT1);
+
+            assert.equal(isVesting2.valueOf(), 1, "Not the correct value");
+        });
+
+        it("Should return the number of phases that have been collected by the user", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 1000000;
+
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const phasesClaimed1 = await token.phasesClaimed.call(ACCOUNT1);
+
+            assert.equal(phasesClaimed1.valueOf(), 0, "Not the correct value");
+
+            // Need to get into phase 1
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const phasesClaimed2 = await token.phasesClaimed.call(ACCOUNT1);
+
+            assert.equal(phasesClaimed2.valueOf(), 1, "Not the correct value");
+
+            // Need to get into phase 10
+            await increaseTime(DAY * 90);
+            await mine();
+
+            await token.claimPresaleTokens({from: ACCOUNT1});
+            const phasesClaimed3 = await token.phasesClaimed.call(ACCOUNT1);
+
+            assert.equal(phasesClaimed3.valueOf(), 10, "Not the correct value");
+        });
     });
 
+    //////////////////////////////
+    // claimAllAvailableTokens //
+    ////////////////////////////
+    /*
+    1.✔Should execute claimSaleTokens and claimPresaleTokens successfully
+     */
+    describe("claimAllTokens", () => {
+
+        it("Should execute claimSaleTokens and claimPresaleTokens successfully", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
+            const VAL = 100;
+            await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
+            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
+
+            // Need to get into phase 10
+            await increaseTime(DAY * 10);
+            await mine();
+
+            await token.claimAllAvailableTokens({from: ACCOUNT1});
+            const balance = await token.balanceOf.call(ACCOUNT1);
+
+            assert.equal(balance.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
+        });
+    });
+    
     /////////////////
     // cancelDist //
     ///////////////
@@ -542,7 +716,7 @@ contract('TokenDistribution', function(accounts) {
     1.✔Should change cancelDistribution to `true` if executed correctly
      */
 
-    describe("cancelDist - COMPLETE", () => {
+    describe("cancelDist", () => {
 
         it("Should change cancelDistribution to true if executed correctly", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000);
