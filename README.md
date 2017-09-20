@@ -13,6 +13,8 @@ distribution of UKG.
 ## Assumptions
 
 ### Sale Process
+- **This will be done prior to the deployment of any smart contracts. It will be completed with individual wallets with
+a system we built.**
 - The sale will consist of users sending funds to specific wallet addresses, prior to the use audited smart contracts
 - Their contribution amount will be added to a DB consisting of wallet addresses and their associated balances
 - Users can contribute a minimum of $30 USD and a maximum of $100k USD
@@ -77,6 +79,9 @@ time() | `constant` | Returns the block.timstamp. Necessary for testing.
 currentPhase() | `constant` | Returns the current phase number that the distribution is on.
 min() | `private` | Returns the mininum of two numbers.
 whichPhase() | `constant` | Calculates the phase number that the distribution is on.
-claimPresaleTokensIterate() | `internal` | Internal function that gets looped through based on when presale user calls claimPresaleTokens().
+timeRemainingInPhase() | `constant` | Returns the time remaining in the current phase
+phasesClaimable() | `constant` | Returns the number of phases a participant has available to claim
+claimPresaleTokensIterate(phase) | `internal` | Internal function that gets looped through based on when presale user calls claimPresaleTokens().
 claimPresaleTokens() | `external` `notCanceled` `distributionStarted` `presaleTokensStillAvailable` | User calls this function to claim their presale tokens.
-cancelDistribution | `external` `onlyOwner` `notFrozen` | Cancels distribution if a false parameter is entered.
+claimAllAvailableTokens() | `notCanceled` `distributionStarted` | Function to call that allows user to claim both sale and presale tokens available at the current time
+cancelDistribution() | `external` `onlyOwner` `notFrozen` | Cancels distribution if a false parameter is entered.
