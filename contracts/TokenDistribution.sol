@@ -252,7 +252,10 @@ contract TokenDistribution is Ownable, StandardToken {
     notCanceled
     distributionStarted
     {
-        claimSaleTokens();
+        // Participant must not have already collected tokens from sale allocation
+        if (!saleParticipantCollected[msg.sender]) {
+            claimSaleTokens();
+        }
         claimPresaleTokens();
     }
 
