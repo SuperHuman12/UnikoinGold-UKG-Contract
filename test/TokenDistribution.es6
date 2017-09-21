@@ -691,7 +691,7 @@ contract('TokenDistribution', function(accounts) {
      */
     describe("claimAllTokens", () => {
 
-        it.only("Should execute claimSaleTokens and claimPresaleTokens successfully", async () => {
+        it("Should execute claimSaleTokens and claimPresaleTokens successfully", async () => {
             const proxy = await ParticipantAdditionProxy.new();
             const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 100;
@@ -703,13 +703,22 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimAllAvailableTokens({from: ACCOUNT1});
-            const balance = await token.balanceOf.call(ACCOUNT1);
+            const balance1 = await token.balanceOf.call(ACCOUNT1);
 
-            assert.equal(balance.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
+            assert.equal(balance1.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
 
             await token.claimAllAvailableTokens({from: ACCOUNT1});
 
-            assert.equal(balance.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
+            assert.equal(balance1.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
+
+            // Need to get into phase 10
+            await increaseTime(DAY * 90);
+            await mine();
+
+            await token.claimAllAvailableTokens({from: ACCOUNT1});
+            const balance2 = await token.balanceOf.call(ACCOUNT1);
+
+            assert.equal(balance2.valueOf(), VAL * 2, "Not the correct value");
 
         });
     });

@@ -23,6 +23,19 @@ contract('ParticipantAdditionProxy', function(accounts) {
                 assert.equal(total_dist.valueOf(), 100, "Not everyone got 1 token");
             });
 
+            it("Should give 2 groups of 1000 presale users 1 Token Each, one at a time", async () => {
+                const token = await ParticipantAdditionProxy.new();
+
+                var count = 0;
+                for (var j = 0; j < 2; j++) {
+                    for (var i = 0; i < 1000; i++) {
+                        await token.allocatePresaleBalances([accounts[count]], [1]);
+                        count += 1;
+                    }
+                }
+                const total_dist = await token.presaleAllocationTokenCount.call();
+                assert.equal(total_dist.valueOf(), 2000, "Not everyone got 1 token");
+            });
 
             it("Should give a presale user the entire allocation and compare to PRESALE_TOKEN_ALLOCATION_CAP", async () => {
                 const token = await ParticipantAdditionProxy.new();
