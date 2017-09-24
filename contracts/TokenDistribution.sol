@@ -118,11 +118,13 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @param _proxyContractAddress Address of contract holding participant data
     /// @param _freezeTimestamp Time where owner can no longer destroy the contract
     /// @param _distributionStartTimestamp Timestamp to begin the distribution phase
+    /// @param _lockupTimestamp Timestamp to end the lockup
     function TokenDistribution(address _ukgDepositAddr, address _proxyContractAddress, uint256 _freezeTimestamp, uint256 _distributionStartTimestamp, uint256 _lockupTimestamp)
     {
         require(_ukgDepositAddr != 0);                     // Force this value not to be initialized to 0
         require(_distributionStartTimestamp != 0);         // Start timestamp must be defined
         require(_freezeTimestamp != 0);                    // Freeze timestamp must be defined
+        require(_lockupTimestamp != 0);                    // Freeze timestamp must be defined
         require(_proxyContractAddress != 0);               // Proxy contract must be defined
 
         cancelDistribution = false;                        // Shut down if something goes awry
@@ -289,7 +291,7 @@ contract TokenDistribution is Ownable, StandardToken {
         uint256 currentParticipantAmt = participantData.balanceOfLockedParticipants(msg.sender);    // Number of tokens to receive
         uint256 tempLockedTotalSupply  = numLockedTokensDistributed.add(currentParticipantAmt);     // Temp number of locked tokens distributed
 
-        require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 135M tokens for locked
+        require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 200M tokens for locked
 
         numLockedTokensDistributed += currentParticipantAmt;  // Add to locked total token collection
         lockedParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
