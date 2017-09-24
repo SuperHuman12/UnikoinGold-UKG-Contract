@@ -26,7 +26,7 @@ contract ParticipantAdditionProxy is Ownable {
     mapping(address => uint256) public lockedBalances;                 // Save sale participant balances
     mapping(address => bool)    public presaleParticipantAllocated;    // Presale participant has already been allocated
     mapping(address => bool)    public saleParticipantAllocated;       // Sale participant has already been allocated
-    mapping(address => bool)    public lockedParticipantAllocated;     // Sale participant has already been allocated
+    mapping(address => bool)    public lockedParticipantAllocated;     // Locked participant has already been allocated
 
     // Modifiers
 
@@ -52,7 +52,7 @@ contract ParticipantAdditionProxy is Ownable {
         lockedAdditionDone = false;        // Locked participants not yet added
         presaleAllocationTokenCount = 0;   // No presale tokens allocated initially
         saleAllocationTokenCount = 0;      // No sale tokens allocated initially
-        lockedAllocationTokenCount = 0;      // No locked tokens allocated initially
+        lockedAllocationTokenCount = 0;    // No locked tokens allocated initially
     }
 
     /// @dev Distribute tokens to sale participants immediately
@@ -65,7 +65,6 @@ contract ParticipantAdditionProxy is Ownable {
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 i = 0; i < approvedPresaleParticipants.length; i++) {
             require(!presaleParticipantAllocated[approvedPresaleParticipants[i]]); // Participant's funds cannot have been allocated already
-            // Removes ability to accidentally overwrite 
 
             uint256 tempPresaleTotalSupply  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]); // Temp total supply balance
             require(tempPresaleTotalSupply <= PRESALE_TOKEN_ALLOCATION_CAP);       // Cannot allocate > 65M tokens
@@ -86,14 +85,12 @@ contract ParticipantAdditionProxy is Ownable {
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedSaleParticipants.length; j++) {
             require(!saleParticipantAllocated[approvedSaleParticipants[j]]);        // Participant's funds cannot have been allocated already
-            // Removes ability to accidentally overwrite 
-
 
             uint256 tempSaleTotalSupply  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]); // Temp total supply balance
             require(tempSaleTotalSupply <= SALE_TOKEN_ALLOCATION_CAP);             // Cannot allocate > 135M tokens
             saleAllocationTokenCount = tempSaleTotalSupply;                        // Add to presale total token allocations
 
-            saleParticipantAllocated[approvedSaleParticipants[j]] = true;    // Participant's funds have been allocated
+            saleParticipantAllocated[approvedSaleParticipants[j]] = true;          // Participant's funds have been allocated
             saleBalances[approvedSaleParticipants[j]] = approvedSaleParticipantsAllocations[j];      // Assigns tokens to participant
         }
     }
@@ -108,11 +105,9 @@ contract ParticipantAdditionProxy is Ownable {
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedLockedParticipants.length; j++) {
             require(!lockedParticipantAllocated[approvedLockedParticipants[j]]);        // Participant's funds cannot have been allocated already
-            // Removes ability to accidentally overwrite
-
 
             uint256 tempLockedTotalSupply  = lockedAllocationTokenCount.add(approvedLockedParticipantsAllocations[j]); // Temp total supply balance
-            require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP);             // Cannot allocate > 135M tokens
+            require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP);             // Cannot allocate > 200M tokens
             lockedAllocationTokenCount = tempLockedTotalSupply;                        // Add to locked total token allocations
 
             lockedParticipantAllocated[approvedLockedParticipants[j]] = true;          // Participant's funds have been allocated
