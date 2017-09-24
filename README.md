@@ -3,11 +3,14 @@ distribution of UKG.
 
 ## Table of Contents
 
+* [Deployment](#deployment)
 * [Assumptions](#assumptions)
 * [Contracts](#contracts)
     * [Descriptions](#descriptions)
 * [Specifications](#specifications)
     * [Functions](#functions)
+
+## Deployment
 
 
 ## Assumptions

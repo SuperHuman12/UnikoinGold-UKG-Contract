@@ -128,6 +128,58 @@ contract('ParticipantAdditionProxy', function(accounts) {
         });
     });
 
+    describe("allocateLockedBalances", () => {
+
+        context("Adding locked users", async () => {
+
+            it("Should give 1 locked users 1 Token Each, one at a time", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                for (var i = 0; i < 1; i++) {
+                    await token.allocateLockedBalances([accounts[i]], [1]);
+                }
+                const total_dist = await token.lockedAllocationTokenCount.call();
+
+                assert.equal(total_dist.valueOf(), 1, "Not everyone got 1 token");
+            });
+
+            it("Should give a locked user the entire allocation and compare to LOCKED_TOKEN_ALLOCATION_CAP", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                await token.allocateLockedBalances([accounts[2]], [200 * (10**6) * 10**EXP_18]);
+
+                const total_dist = await token.lockedAllocationTokenCount.call();
+                const LOCKED_TOKEN_ALLOCATION_CAP = await token.LOCKED_TOKEN_ALLOCATION_CAP.call();
+
+                assert.equal(total_dist.valueOf(), LOCKED_TOKEN_ALLOCATION_CAP.valueOf(), "Single user didn't get whole pot");
+            });
+        });
+
+        context("Checking requirements", async () => {
+
+            it("Should not allow locked user to be input twice", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                await token.allocateLockedBalances([accounts[0]], [1]);
+                try {
+                    await token.allocateLockedBalances([accounts[0]], [2]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+
+            it("Should not allow locked collection to go over LOCKED_TOKEN_ALLOCATION_CAP", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                await token.allocateLockedBalances([accounts[2]], [134 * (10**6) * 10**EXP_18]);
+
+                try {
+                    await token.allocateLockedBalances([accounts[2]], [2 * (10**6) * 10**EXP_18]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+        });
+    });
+
     describe("endPresaleParticipantAdditionProxy", () => {
 
         context("Closing the presale", async () => {

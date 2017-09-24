@@ -20,5 +20,5 @@ module.exports = function(deployer, network, accounts) {
     deployer.deploy(ParticipantAdditionProxy);
 
     deployer.link(SafeMath, TokenDistribution);
-    deployer.deploy(TokenDistribution, OWNER, PROXY_ADDRESS, now, now+300);
+    deployer.deploy(TokenDistribution, OWNER, PROXY_ADDRESS, now, now+300, now + 500);
 };

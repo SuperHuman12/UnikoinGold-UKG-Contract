@@ -29,6 +29,7 @@ import {StandardToken} from './Token.sol';
 contract ProxyContract {
     function balanceOfPresaleParticipants(address) constant returns (uint256) {}
     function balanceOfSaleParticipants(address) constant returns (uint256) {}
+    function balanceOfLockedParticipants(address) constant returns (uint256) {}
 }
 
 contract TokenDistribution is Ownable, StandardToken {
@@ -40,7 +41,8 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
     uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**EXP_18;   // 200M tokens to be distributed to community
-    uint256 public constant UKG_FUND = 800 * (10**6) * 10**EXP_18;                     // 800M UKG reserved for Unikrn use
+    uint256 public constant LOCKED_TOKEN_ALLOCATION_CAP = 200 * (10**6) * 10**EXP_18;  // 200M tokens distributed after sale distribution
+    uint256 public constant UKG_FUND = 600 * (10**6) * 10**EXP_18;                     // 600M UKG reserved for Unikrn use
 
     // Secure wallets
     address public ukgDepositAddr;                   // Deposit address for UKG for Unikrn
@@ -49,22 +51,26 @@ contract TokenDistribution is Ownable, StandardToken {
     bool    public cancelDistribution;               // Call off distribution if something goes wrong prior to token distribution
     uint256 public numPresaleTokensDistributed;      // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;         // Number of sale tokens that have been distributed
+    uint256 public numLockedTokensDistributed;         // Number of sale tokens that have been distributed
     address public proxyContractAddress;             // Address of contract holding participant data
 
     // Timing
     uint256 public freezeTimestamp;                  // Time where owner can no longer destroy the contract
     uint256 public distributionStartTimestamp;       // Time to begin distribution
+    uint256 public lockupTimestamp;       // Time to begin distribution
 
     // Events
     event CreateUKGEvent(address indexed _to, uint256 _value);                  // Logs the creation of the token
     event DistributeSaleUKGEvent(address indexed _to, uint256 _value);          // Logs the distribution of the token
     event DistributePresaleUKGEvent(uint phase, address user, uint amount);     // Logs the user claiming their tokens
+    event DistributeLockedUKGEvent(address indexed _to, uint256 _value);        // Logs the distribution of the token
 
     // Mapping
     mapping (address => uint256) public presaleParticipantAllowedAllocation;    // Presale participant able to claim tokens
     mapping (address => uint256) public allocationPerPhase;                     // Presale participant allocation per phase
     mapping (address => uint256) public remainingAllowance;                     // Amount of tokens presale participant has left to claim
     mapping (address => bool) public saleParticipantCollected;                  // Sale user has collected all funds bool
+    mapping (address => bool) public lockedParticipantCollected;                  // Locked user has collected all funds bool
     mapping (address => uint256) public isVesting;                              // 0 if the user is currently vesting. 1 if they are finished.
     mapping (address => uint256) public phasesClaimed;                          // Number of claimed phases
     mapping (address => uint256) public phasesClaimable;                        // Number of phases the user can claim
@@ -88,6 +94,11 @@ contract TokenDistribution is Ownable, StandardToken {
         _;
     }
 
+    modifier lockupOver {
+        require(lockupTimestamp < block.timestamp);
+        _;
+    }
+
     modifier presaleTokensStillAvailable {
         require(numPresaleTokensDistributed < PRESALE_TOKEN_ALLOCATION_CAP);
         _;
@@ -98,12 +109,16 @@ contract TokenDistribution is Ownable, StandardToken {
         _;
     }
 
+    modifier lockedTokensStillAvailable {
+        require(numLockedTokensDistributed < LOCKED_TOKEN_ALLOCATION_CAP);
+        _;
+    }
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
     /// @param _proxyContractAddress Address of contract holding participant data
     /// @param _freezeTimestamp Time where owner can no longer destroy the contract
     /// @param _distributionStartTimestamp Timestamp to begin the distribution phase
-    function TokenDistribution(address _ukgDepositAddr, address _proxyContractAddress, uint256 _freezeTimestamp, uint256 _distributionStartTimestamp)
+    function TokenDistribution(address _ukgDepositAddr, address _proxyContractAddress, uint256 _freezeTimestamp, uint256 _distributionStartTimestamp, uint256 _lockupTimestamp)
     {
         require(_ukgDepositAddr != 0);                     // Force this value not to be initialized to 0
         require(_distributionStartTimestamp != 0);         // Start timestamp must be defined
@@ -117,8 +132,9 @@ contract TokenDistribution is Ownable, StandardToken {
         proxyContractAddress = _proxyContractAddress;      // Address of contract holding participant data
         freezeTimestamp = _freezeTimestamp;                // Time where owner can no longer destroy the contract
         distributionStartTimestamp = _distributionStartTimestamp;
-        balances[this] = TOTAL_COMMUNITY_ALLOCATION;       // Deposit community funds into the contract to be collected
-        CreateUKGEvent(this, TOTAL_COMMUNITY_ALLOCATION);  // Logs token creation
+        lockupTimestamp = _lockupTimestamp;
+        balances[this] = TOTAL_COMMUNITY_ALLOCATION + LOCKED_TOKEN_ALLOCATION_CAP;       // Deposit community funds and locked funds into the contract to be collected
+        CreateUKGEvent(this, TOTAL_COMMUNITY_ALLOCATION + LOCKED_TOKEN_ALLOCATION_CAP);  // Logs token creation
         balances[ukgDepositAddr] = UKG_FUND;               // Deposit Unikrn funds that are preallocated to the Unikrn team
         CreateUKGEvent(ukgDepositAddr, UKG_FUND);          // Logs Unikrn fund
         endOfPhaseTimestamp[0] = _distributionStartTimestamp + PHASE_LENGTH;    // Defines the ending timestamp of phase 0
@@ -257,6 +273,29 @@ contract TokenDistribution is Ownable, StandardToken {
             claimSaleTokens();
         }
         claimPresaleTokens();
+    }
+
+    /// @dev allows locked users to collect their funds.
+    function claimLockedTokens()
+    notCanceled
+    distributionStarted
+    lockupOver
+    lockedTokensStillAvailable
+    {
+        require(!lockedParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
+
+        ProxyContract participantData = ProxyContract(proxyContractAddress);
+
+        uint256 currentParticipantAmt = participantData.balanceOfLockedParticipants(msg.sender);    // Number of tokens to receive
+        uint256 tempLockedTotalSupply  = numLockedTokensDistributed.add(currentParticipantAmt);     // Temp number of locked tokens distributed
+
+        require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 135M tokens for locked
+
+        numLockedTokensDistributed += currentParticipantAmt;  // Add to locked total token collection
+        lockedParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
+
+        assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));   // Distributes tokens to participant
+        DistributeLockedUKGEvent(msg.sender, currentParticipantAmt);               // Logs token creation
     }
 
     /// @dev Cancels contract if something is wrong prior to distribution
