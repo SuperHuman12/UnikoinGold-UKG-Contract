@@ -87,4 +87,5 @@ phasesClaimable() | `constant` | Returns the number of phases a participant has 
 claimPresaleTokensIterate(phase) | `internal` | Internal function that gets looped through based on when presale user calls claimPresaleTokens().
 claimPresaleTokens() | `external` `notCanceled` `distributionStarted` `presaleTokensStillAvailable` | User calls this function to claim their presale tokens.
 claimAllAvailableTokens() | `notCanceled` `distributionStarted` | Function to call that allows user to claim both sale and presale tokens available at the current time
+claimLockedTokens() | `notCanceled` `distributionStarted` `lockupOver` `lockedTokensStillAvailable` | Distributes tokens to locked up participants.
 cancelDistribution() | `external` `onlyOwner` `notFrozen` | Cancels distribution if a false parameter is entered.
