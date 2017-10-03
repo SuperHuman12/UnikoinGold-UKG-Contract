@@ -159,11 +159,10 @@ contract TokenDistribution is Ownable, StandardToken {
         ProxyContract participantData = ProxyContract(proxyContractAddress);
 
         uint256 currentParticipantAmt = participantData.balanceOfSaleParticipants(msg.sender);  // Number of tokens to receive
-        uint256 tempSaleTotalSupply  = numSaleTokensDistributed.add(currentParticipantAmt);     // Temp number of sale tokens distributed
+        numSaleTokensDistributed  = numSaleTokensDistributed.add(currentParticipantAmt);        // Number of sale tokens distributed
 
-        require(tempSaleTotalSupply <= SALE_TOKEN_ALLOCATION_CAP); // Cannot allocate > 135M tokens for sale
+        require(numSaleTokensDistributed <= SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens for sale
 
-        numSaleTokensDistributed = numSaleTokensDistributed.add(currentParticipantAmt);  // Add to sale total token collection
         saleParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
 
         assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
@@ -291,11 +290,10 @@ contract TokenDistribution is Ownable, StandardToken {
         ProxyContract participantData = ProxyContract(proxyContractAddress);
 
         uint256 currentParticipantAmt = participantData.balanceOfLockedParticipants(msg.sender);    // Number of tokens to receive
-        uint256 tempLockedTotalSupply  = numLockedTokensDistributed.add(currentParticipantAmt);     // Temp number of locked tokens distributed
+        numLockedTokensDistributed  = numLockedTokensDistributed.add(currentParticipantAmt);      // Number of locked tokens distributed
 
-        require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 200M tokens for locked
+        require(numLockedTokensDistributed <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 200M tokens for locked
 
-        numLockedTokensDistributed = numLockedTokensDistributed.add(currentParticipantAmt);  // Add to locked total token collection
         lockedParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
 
         assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));   // Distributes tokens to participant
