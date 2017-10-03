@@ -57,8 +57,8 @@ contract ParticipantAdditionProxy is Ownable {
     /// @param approvedPresaleParticipantsAllocations Array of allocations
     function allocatePresaleBalances(address[] approvedPresaleParticipants, uint256[] approvedPresaleParticipantsAllocations)
     onlyOwner
-    presaleParticipantAdditionOngoing
     {
+        require(!presaleAdditionDone);  // Presale participant allocation cannot be completed
         require(approvedPresaleParticipants.length == approvedPresaleParticipantsAllocations.length);   // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 i = 0; i < approvedPresaleParticipants.length; i++) {
@@ -76,8 +76,8 @@ contract ParticipantAdditionProxy is Ownable {
     /// @param approvedSaleParticipantsAllocations Array of allocations
     function allocateSaleBalances(address[] approvedSaleParticipants, uint256[] approvedSaleParticipantsAllocations)
     onlyOwner
-    saleParticipantAdditionOngoing
     {
+        require(!saleAdditionDone);  // Sale participant allocation cannot be completed
         require(approvedSaleParticipants.length == approvedSaleParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedSaleParticipants.length; j++) {
@@ -95,8 +95,8 @@ contract ParticipantAdditionProxy is Ownable {
     /// @param approvedLockedParticipantsAllocations Array of allocations
     function allocateLockedBalances(address[] approvedLockedParticipants, uint256[] approvedLockedParticipantsAllocations)
     onlyOwner
-    lockedParticipantAdditionOngoing
     {
+        require(!lockedAdditionDone);  // Locked participant allocation cannot be completed
         require(approvedLockedParticipants.length == approvedLockedParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedLockedParticipants.length; j++) {

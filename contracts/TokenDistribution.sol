@@ -99,20 +99,6 @@ contract TokenDistribution is Ownable, StandardToken {
         _;
     }
 
-    modifier presaleTokensStillAvailable {
-        require(numPresaleTokensDistributed < PRESALE_TOKEN_ALLOCATION_CAP);
-        _;
-    }
-
-    modifier saleTokensStillAvailable {
-        require(numSaleTokensDistributed < SALE_TOKEN_ALLOCATION_CAP);
-        _;
-    }
-
-    modifier lockedTokensStillAvailable {
-        require(numLockedTokensDistributed < LOCKED_TOKEN_ALLOCATION_CAP);
-        _;
-    }
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
     /// @param _proxyContractAddress Address of contract holding participant data
@@ -152,8 +138,8 @@ contract TokenDistribution is Ownable, StandardToken {
     function claimSaleTokens()
     notCanceled
     distributionStarted
-    saleTokensStillAvailable
     {
+        require(numSaleTokensDistributed < SALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
         require(!saleParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
 
         ProxyContract participantData = ProxyContract(proxyContractAddress);
@@ -255,8 +241,8 @@ contract TokenDistribution is Ownable, StandardToken {
     function claimPresaleTokens()
     notCanceled
     distributionStarted
-    presaleTokensStillAvailable
     {
+        require(numPresaleTokensDistributed < PRESALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
         for (uint i = 1; i <= currentPhase(); i++) {
             claimPresaleTokensIterate(i);  // Calls claim function
         }
@@ -283,8 +269,8 @@ contract TokenDistribution is Ownable, StandardToken {
     notCanceled
     distributionStarted
     lockupOver
-    lockedTokensStillAvailable
     {
+        require(numLockedTokensDistributed < LOCKED_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
         require(!lockedParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
 
         ProxyContract participantData = ProxyContract(proxyContractAddress);
