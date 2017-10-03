@@ -126,6 +126,8 @@ contract TokenDistribution is Ownable, StandardToken {
         require(_freezeTimestamp != 0);                    // Freeze timestamp must be defined
         require(_lockupTimestamp != 0);                    // Freeze timestamp must be defined
         require(_proxyContractAddress != 0);               // Proxy contract must be defined
+        require(_freezeTimestamp < _distributionStartTimestamp);  // Freeze timestamp must occur before the distributionStartTimestamp
+
 
         cancelDistribution = false;                        // Shut down if something goes awry
         numPresaleTokensDistributed = 0;                   // No presale tokens distributed initially
