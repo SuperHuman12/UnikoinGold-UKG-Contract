@@ -40,6 +40,7 @@ contract TokenDistribution is Ownable, StandardToken {
     // Constants
     uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
     uint256 public constant PHASE_LENGTH = 9 days;                                     // Length of the phase
+    uint256 public constant MAX_PHASES = 10;                                           // Maximum number of phases
     uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
     uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**EXP_18;   // 200M tokens to be distributed to community
@@ -172,7 +173,7 @@ contract TokenDistribution is Ownable, StandardToken {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
         ? 0
-        : (timestamp.sub(distributionStartTimestamp) / PHASE_LENGTH).min256(10);  // Returns phase 1-10. If it is past phase 10, return 10
+        : (timestamp.sub(distributionStartTimestamp) / PHASE_LENGTH).min256(MAX_PHASES);  // Returns phase 1-10. If it is past phase 10, return 10
     }
 
     /// @dev Returns the time remaining in the current phase
@@ -198,8 +199,8 @@ contract TokenDistribution is Ownable, StandardToken {
 
             require(presaleParticipantAllowedAllocation[msg.sender] != 0);                              // User must have participated in the presale
 
-            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase
-            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase
+            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase. Mod 10 for max of 10 phases
+            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase. Divide by 10 for max of 10 phases.
             remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];           // Number of tokens to receive
         }
 
