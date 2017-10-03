@@ -48,38 +48,38 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public constant UKG_FUND = 600 * (10**6) * 10**EXP_18;                     // 600M UKG reserved for Unikrn use
 
     // Secure wallets
-    address public ukgDepositAddr;                   // Deposit address for UKG for Unikrn
+    address public ukgDepositAddr;              // Deposit address for UKG for Unikrn
 
     // Parameters
-    bool    public cancelDistribution;               // Call off distribution if something goes wrong prior to token distribution
-    uint256 public numPresaleTokensDistributed;      // Number of presale tokens that have been distributed
-    uint256 public numSaleTokensDistributed;         // Number of sale tokens that have been distributed
-    uint256 public numLockedTokensDistributed;       // Number of sale tokens that have been distributed
-    address public proxyContractAddress;             // Address of contract holding participant data
+    bool    public cancelDistribution;          // Call off distribution if something goes wrong prior to token distribution
+    uint256 public numPresaleTokensDistributed; // Number of presale tokens that have been distributed
+    uint256 public numSaleTokensDistributed;    // Number of sale tokens that have been distributed
+    uint256 public numLockedTokensDistributed;  // Number of sale tokens that have been distributed
+    address public proxyContractAddress;        // Address of contract holding participant data
 
     // Timing
-    uint256 public freezeTimestamp;                  // Time where owner can no longer destroy the contract
-    uint256 public distributionStartTimestamp;       // Time to begin distribution
-    uint256 public lockupTimestamp;       // Time to begin distribution
+    uint256 public freezeTimestamp;             // Time where owner can no longer destroy the contract
+    uint256 public distributionStartTimestamp;  // Time to begin distribution
+    uint256 public lockupTimestamp;             // Time to begin distribution
 
     // Events
-    event CreateUKGEvent(address indexed _to, uint256 _value);                  // Logs the creation of the token
-    event DistributeSaleUKGEvent(address indexed _to, uint256 _value);          // Logs the distribution of the token
-    event DistributePresaleUKGEvent(uint phase, address user, uint amount);     // Logs the user claiming their tokens
-    event DistributeLockedUKGEvent(address indexed _to, uint256 _value);        // Logs the distribution of the token
+    event CreateUKGEvent(address indexed _to, uint256 _value);                // Logs the creation of the token
+    event DistributeSaleUKGEvent(address indexed _to, uint256 _value);        // Logs the distribution of the token
+    event DistributePresaleUKGEvent(uint phase, address user, uint amount);   // Logs the user claiming their tokens
+    event DistributeLockedUKGEvent(address indexed _to, uint256 _value);      // Logs the distribution of the token
 
     // Mapping
-    mapping (address => uint256) public presaleParticipantAllowedAllocation;    // Presale participant able to claim tokens
-    mapping (address => uint256) public allocationPerPhase;                     // Presale participant allocation per phase
-    mapping (address => uint256) public remainingAllowance;                     // Amount of tokens presale participant has left to claim
-    mapping (address => bool) public saleParticipantCollected;                  // Sale user has collected all funds bool
-    mapping (address => bool) public lockedParticipantCollected;                  // Locked user has collected all funds bool
-    mapping (address => uint256) public isVesting;                              // 0 if the user is currently vesting. 1 if they are finished.
-    mapping (address => uint256) public phasesClaimed;                          // Number of claimed phases
-    mapping (address => uint256) public phasesClaimable;                        // Number of phases the user can claim
-    mapping (uint => mapping (address => bool))  public  claimed;               // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
+    mapping (address => uint256) public presaleParticipantAllowedAllocation;  // Presale participant able to claim tokens
+    mapping (address => uint256) public allocationPerPhase;                   // Presale participant allocation per phase
+    mapping (address => uint256) public remainingAllowance;                   // Amount of tokens presale participant has left to claim
+    mapping (address => bool) public saleParticipantCollected;                // Sale user has collected all funds bool
+    mapping (address => bool) public lockedParticipantCollected;              // Locked user has collected all funds bool
+    mapping (address => uint256) public isVesting;                            // 0 if the user is currently vesting. 1 if they are finished.
+    mapping (address => uint256) public phasesClaimed;                        // Number of claimed phases
+    mapping (address => uint256) public phasesClaimable;                      // Number of phases the user can claim
+    mapping (uint => mapping (address => bool))  public  claimed;             // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
 
-    mapping (uint256 => uint256) public endOfPhaseTimestamp;    // Presale participant able to claim tokens
+    mapping (uint256 => uint256) public endOfPhaseTimestamp;  // Presale participant able to claim tokens
 
     // Modifiers
     modifier notFrozen {
@@ -117,7 +117,6 @@ contract TokenDistribution is Ownable, StandardToken {
         require(_proxyContractAddress != 0);               // Proxy contract must be defined
         require(_freezeTimestamp < _distributionStartTimestamp);  // Freeze timestamp must occur before the distributionStartTimestamp
 
-
         cancelDistribution = false;                        // Shut down if something goes awry
         numPresaleTokensDistributed = 0;                   // No presale tokens distributed initially
         numSaleTokensDistributed = 0;                      // No sale tokens distributed initially
@@ -144,7 +143,7 @@ contract TokenDistribution is Ownable, StandardToken {
     distributionStarted
     {
         require(numSaleTokensDistributed < SALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
-        require(!saleParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
+        require(!saleParticipantCollected[msg.sender]);                 // Participant's funds cannot have been collected already
 
         ProxyContract participantData = ProxyContract(proxyContractAddress);
 
@@ -153,7 +152,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
         require(numSaleTokensDistributed <= SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens for sale
 
-        saleParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
+        saleParticipantCollected[msg.sender] = true;  // User cannot collect tokens again
 
         assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
         DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);                // Logs token creation
@@ -198,11 +197,11 @@ contract TokenDistribution is Ownable, StandardToken {
             ProxyContract participantData = ProxyContract(proxyContractAddress);
             presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
 
-            require(presaleParticipantAllowedAllocation[msg.sender] != 0);                              // User must have participated in the presale
+            require(presaleParticipantAllowedAllocation[msg.sender] != 0);                             // User must have participated in the presale
 
-            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                      // Calculates how many extra tokens to distribute for first phase. Mod 10 for max of 10 phases
-            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);   // Calculates how many tokens collectible per phase. Divide by 10 for max of 10 phases.
-            remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];           // Number of tokens to receive
+            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                     // Calculates how many extra tokens to distribute for first phase. Mod 10 for max of 10 phases
+            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);  // Calculates how many tokens collectible per phase. Divide by 10 for max of 10 phases.
+            remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];          // Number of tokens to receive
         }
 
         // If the participant has claimed for this phase, return
@@ -210,19 +209,19 @@ contract TokenDistribution is Ownable, StandardToken {
             return;
         }
 
-        claimed[phase][msg.sender] = true;                                      // User cannot participate in this phase again
+        claimed[phase][msg.sender] = true;  // User cannot participate in this phase again
 
         // The first distribution phase will have the modulus added to it
         uint256 phaseAllocation;  // Amount to distribute this phase
 
         if (phase != 1) {
-            phaseAllocation = allocationPerPhase[msg.sender];               // Allocation
+            phaseAllocation = allocationPerPhase[msg.sender];  // Allocation
         } else {
             phaseAllocation = allocationPerPhase[msg.sender].add(modBal);  // Allocation plus mod for first phase
         }
 
-        remainingAllowance[msg.sender] = remainingAllowance[msg.sender].sub(phaseAllocation);                               // Subtract the claimed tokens from the remaining allocation
-        numPresaleTokensDistributed = numPresaleTokensDistributed.add(phaseAllocation);  // Add to the total number of presale tokens distributed
+        remainingAllowance[msg.sender] = remainingAllowance[msg.sender].sub(phaseAllocation);  // Subtract the claimed tokens from the remaining allocation
+        numPresaleTokensDistributed = numPresaleTokensDistributed.add(phaseAllocation);        // Add to the total number of presale tokens distributed
 
         // If this is the last phase, isVesting flag turns to 1 (aka false)
         if (phase == 10) {
@@ -232,8 +231,8 @@ contract TokenDistribution is Ownable, StandardToken {
         // Define user statistics for web3 use
         phasesClaimed[msg.sender] = phase;
 
-        assert(StandardToken(this).transfer(msg.sender, phaseAllocation));      // Distribute tokens to user
-        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);          // Logs the user claiming their tokens
+        assert(StandardToken(this).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
+        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
     }
 
 
@@ -271,16 +270,16 @@ contract TokenDistribution is Ownable, StandardToken {
     lockupOver
     {
         require(numLockedTokensDistributed < LOCKED_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
-        require(!lockedParticipantCollected[msg.sender]); // Participant's funds cannot have been collected already
+        require(!lockedParticipantCollected[msg.sender]);                   // Participant's funds cannot have been collected already
 
         ProxyContract participantData = ProxyContract(proxyContractAddress);
 
-        uint256 currentParticipantAmt = participantData.balanceOfLockedParticipants(msg.sender);    // Number of tokens to receive
+        uint256 currentParticipantAmt = participantData.balanceOfLockedParticipants(msg.sender);  // Number of tokens to receive
         numLockedTokensDistributed  = numLockedTokensDistributed.add(currentParticipantAmt);      // Number of locked tokens distributed
 
-        require(numLockedTokensDistributed <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 200M tokens for locked
+        require(numLockedTokensDistributed <= LOCKED_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 200M tokens for locked
 
-        lockedParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
+        lockedParticipantCollected[msg.sender] = true;  // User cannot collect tokens again
 
         assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));   // Distributes tokens to participant
         DistributeLockedUKGEvent(msg.sender, currentParticipantAmt);               // Logs token creation

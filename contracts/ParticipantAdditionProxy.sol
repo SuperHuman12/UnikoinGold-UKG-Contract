@@ -7,49 +7,33 @@ contract ParticipantAdditionProxy is Ownable {
     using SafeMath for uint;
 
     // Constants
-    uint256 public constant EXP_18 = 18;                                                 // Used to convert Wei to ETH
-    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;    // 65M tokens distributed after sale distribution
-    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;      // 135M tokens distributed after sale distribution
-    uint256 public constant LOCKED_TOKEN_ALLOCATION_CAP = 200 * (10**6) * 10**EXP_18;    // 200M tokens locked
+    uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
+    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
+    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
+    uint256 public constant LOCKED_TOKEN_ALLOCATION_CAP = 200 * (10**6) * 10**EXP_18;  // 200M tokens locked
 
     // Parameters
-    bool    public presaleAdditionDone;           // State of presale addition
-    bool    public saleAdditionDone;              // Finalizes sale participant addition
-    bool    public lockedAdditionDone;            // Finalizes locked participant addition
-    uint256 public presaleAllocationTokenCount;   // Counts presale tokens allocated. Used as safety check.
-    uint256 public saleAllocationTokenCount;      // Counts sale tokens allocated. Used as safety check.
-    uint256 public lockedAllocationTokenCount;    // Counts locked tokens allocated. Used as safety check.
+    bool    public presaleAdditionDone;          // State of presale addition
+    bool    public saleAdditionDone;             // Finalizes sale participant addition
+    bool    public lockedAdditionDone;           // Finalizes locked participant addition
+    uint256 public presaleAllocationTokenCount;  // Counts presale tokens allocated. Used as safety check.
+    uint256 public saleAllocationTokenCount;     // Counts sale tokens allocated. Used as safety check.
+    uint256 public lockedAllocationTokenCount;   // Counts locked tokens allocated. Used as safety check.
 
     // Mapping
-    mapping(address => uint256) public presaleBalances;                // Save presale participant balances
-    mapping(address => uint256) public saleBalances;                   // Save sale participant balances
-    mapping(address => uint256) public lockedBalances;                 // Save sale participant balances
+    mapping(address => uint256) public presaleBalances;  // Save presale participant balances
+    mapping(address => uint256) public saleBalances;     // Save sale participant balances
+    mapping(address => uint256) public lockedBalances;   // Save sale participant balances
 
-    // Modifiers
-
-    modifier presaleParticipantAdditionOngoing {
-        require(!presaleAdditionDone);
-        _;
-    }
-
-    modifier saleParticipantAdditionOngoing {
-        require(!saleAdditionDone);
-        _;
-    }
-
-    modifier lockedParticipantAdditionOngoing {
-        require(!lockedAdditionDone);
-        _;
-    }
     /// @dev ParticipantAddition(): Constructor for the participant addition contract
     function ParticipantAdditionProxy()
     {
-        saleAdditionDone = false;          // Sale participants not yet added
-        presaleAdditionDone = false;       // Presale participants not yet added
-        lockedAdditionDone = false;        // Locked participants not yet added
-        presaleAllocationTokenCount = 0;   // No presale tokens allocated initially
-        saleAllocationTokenCount = 0;      // No sale tokens allocated initially
-        lockedAllocationTokenCount = 0;    // No locked tokens allocated initially
+        saleAdditionDone = false;         // Sale participants not yet added
+        presaleAdditionDone = false;      // Presale participants not yet added
+        lockedAdditionDone = false;       // Locked participants not yet added
+        presaleAllocationTokenCount = 0;  // No presale tokens allocated initially
+        saleAllocationTokenCount = 0;     // No sale tokens allocated initially
+        lockedAllocationTokenCount = 0;   // No locked tokens allocated initially
     }
 
     /// @dev Distribute tokens to sale participants immediately
@@ -59,7 +43,7 @@ contract ParticipantAdditionProxy is Ownable {
     onlyOwner
     {
         require(!presaleAdditionDone);  // Presale participant allocation cannot be completed
-        require(approvedPresaleParticipants.length == approvedPresaleParticipantsAllocations.length);   // The arrays passed in must be of equal length
+        require(approvedPresaleParticipants.length == approvedPresaleParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 i = 0; i < approvedPresaleParticipants.length; i++) {
             require(presaleBalances[approvedPresaleParticipants[i]] == 0);  // Participant's funds cannot have been allocated already
@@ -67,7 +51,7 @@ contract ParticipantAdditionProxy is Ownable {
             presaleAllocationTokenCount  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]);  // Total supply balance
             require(presaleAllocationTokenCount <= PRESALE_TOKEN_ALLOCATION_CAP);                                       // Cannot allocate > 65M tokens
 
-            presaleBalances[approvedPresaleParticipants[i]] = approvedPresaleParticipantsAllocations[i];      // Assigns tokens to participant
+            presaleBalances[approvedPresaleParticipants[i]] = approvedPresaleParticipantsAllocations[i];  // Assigns tokens to participant
         }
     }
 
@@ -86,7 +70,7 @@ contract ParticipantAdditionProxy is Ownable {
             saleAllocationTokenCount  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]);  // Total supply balance
             require(saleAllocationTokenCount <= SALE_TOKEN_ALLOCATION_CAP);                                    // Cannot allocate > 135M tokens
 
-            saleBalances[approvedSaleParticipants[j]] = approvedSaleParticipantsAllocations[j];      // Assigns tokens to participant
+            saleBalances[approvedSaleParticipants[j]] = approvedSaleParticipantsAllocations[j];  // Assigns tokens to participant
         }
     }
 
@@ -105,7 +89,7 @@ contract ParticipantAdditionProxy is Ownable {
             lockedAllocationTokenCount = lockedAllocationTokenCount.add(approvedLockedParticipantsAllocations[j]);  // Total supply balance
             require(lockedAllocationTokenCount <= LOCKED_TOKEN_ALLOCATION_CAP);                                     // Cannot allocate > 200M tokens
 
-            lockedBalances[approvedLockedParticipants[j]] = approvedLockedParticipantsAllocations[j];      // Assigns tokens to participant
+            lockedBalances[approvedLockedParticipants[j]] = approvedLockedParticipantsAllocations[j];  // Assigns tokens to participant
         }
     }
 
@@ -118,7 +102,7 @@ contract ParticipantAdditionProxy is Ownable {
     function endPresaleParticipantAddition()
     onlyOwner
     {
-        require(presaleAllocationTokenCount == PRESALE_TOKEN_ALLOCATION_CAP);      // Cannot allocate > 65M tokens
+        require(presaleAllocationTokenCount == PRESALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 65M tokens
         // Need to have allocated all tokens
         presaleAdditionDone = true;
     }
@@ -128,7 +112,7 @@ contract ParticipantAdditionProxy is Ownable {
     function endSaleParticipantAddition()
     onlyOwner
     {
-        require(saleAllocationTokenCount == SALE_TOKEN_ALLOCATION_CAP);      // Cannot allocate > 135M tokens
+        require(saleAllocationTokenCount == SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens
         // Need to have allocated all tokens
 
         saleAdditionDone = true;
@@ -139,7 +123,7 @@ contract ParticipantAdditionProxy is Ownable {
     function endLockedParticipantAddition()
     onlyOwner
     {
-        require(lockedAllocationTokenCount == LOCKED_TOKEN_ALLOCATION_CAP);      // Cannot allocate > 200M tokens
+        require(lockedAllocationTokenCount == LOCKED_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 200M tokens
         // Need to have allocated all tokens
 
         lockedAdditionDone = true;
