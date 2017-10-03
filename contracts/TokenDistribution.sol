@@ -188,6 +188,7 @@ contract TokenDistribution is Ownable, StandardToken {
     /// @dev Presale participants call this to claim their tokens.
     /// @param phase Defines which phase of the sale being collected for
     function claimPresaleTokensIterate(uint phase) internal {
+        require(phase > 0);
         require(currentPhase() >= phase);
 
         // If a participant has never called the function before, assign their allocations accordingly
