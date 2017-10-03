@@ -66,6 +66,16 @@ contract('TokenDistribution', function(accounts) {
             assert.notEqual(addr, ACCOUNT0, "proxyContractAddress was not initialized.");
         });
 
+        it("Should not allow freezeTimstamp to be initialized after distributionTimestamp", async () => {
+            try {
+                await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now - 5, now + 15);
+            }
+            catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+        });
+
         it("Should initiate Unikrn account with 600M UKG", async () => {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
             const balance = await token.balanceOf.call(ACCOUNT0);
@@ -115,7 +125,7 @@ contract('TokenDistribution', function(accounts) {
             assert.fail("The function executed when it should not have.")
         });
 
-        it("Should throw if all 135M tokens have been distributed", async () => {
+        it("Should update numSaleTokensDistributed with user's allocation", async () => {
             const proxy = await ParticipantAdditionProxy.new();
             const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 15);
             const VAL = 1;
@@ -125,6 +135,23 @@ contract('TokenDistribution', function(accounts) {
 
             const numSaleTokensDistributed = await token.numSaleTokensDistributed.call();
             assert.equal(numSaleTokensDistributed.valueOf(), VAL, "DIDN'T WORK.");
+        });
+
+        it("Should throw if all 135M tokens have been distributed", async () => {
+            const proxy = await ParticipantAdditionProxy.new();
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 15);
+            const VAL = 135 * (10**6) * 10**EXP_18;
+
+            await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
+            await token.claimSaleTokens({from:ACCOUNT1});
+
+            try {
+                await token.claimSaleTokens({from:ACCOUNT1});
+            } catch (e) {
+                return true;
+            }
+
+            assert.fail("The function executed when it should not have.")
         });
     });
 
@@ -138,7 +165,7 @@ contract('TokenDistribution', function(accounts) {
     describe("time", () => {
 
         it("Should return the current timestamp", async () => {
-            const token = await TokenDistribution.deployed(); // Used deployed because deoploying a new contact takes too long to deploy and causes this test to fail
+            const token = await TokenDistribution.deployed(); // Used deployed because deploying a new contact takes too long to deploy and causes this test to fail
             const status = await token.time.call();
             assert.equal(status.valueOf(), now, "Not the right time.");
         });
@@ -157,25 +184,6 @@ contract('TokenDistribution', function(accounts) {
             const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
             const phase = await token.currentPhase.call();
             assert.equal(phase.valueOf(), 0, "Not the right phase.");
-        });
-    });
-
-    //////////
-    // min //
-    ////////
-    /*
-    1.✔Should return the minimum of two inputs
-     */
-
-    describe("min", () => {
-
-        it("Should return minimum of two inputs", async () => {
-            const small_num=50;
-            const large_num=100;
-
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
-            const result = await token.min.call(small_num, large_num);
-            assert.equal(result.valueOf(), small_num, 'Did not return minimum.');
         });
     });
 
@@ -354,16 +362,15 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return the remaining time in phase 0", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now, now, now);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 3, now - 2, now - 1);
             var shouldBe1 = 9 * DAY;
 
             let remainingTime1 = await token.timeRemainingInPhase.call();
-            assert.closeTo(Number(remainingTime1.valueOf()), shouldBe1, 5, "Not the correct value");
 
+            assert.closeTo(Number(remainingTime1.valueOf()), shouldBe1, 5, "Not the correct value");
             // Fast Forward 5 minutes
             await increaseTime(5 * MINUTE);
             await mine();
-
             let remainingTime2 = await token.timeRemainingInPhase.call();
 
             assert.closeTo(Number(remainingTime2.valueOf()), shouldBe1 - (5 * MINUTE), 5, "Not the correct value");
@@ -371,7 +378,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return the remaining time in other phases", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now, now, now);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 3, now - 2, now - 1);
             const shouldBe1 = (27 * DAY) - (20 * DAY);
             const shouldBe2 = (45 * DAY) - (40 * DAY);
 

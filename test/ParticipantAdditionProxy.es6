@@ -13,6 +13,15 @@ contract('ParticipantAdditionProxy', function(accounts) {
 
         context("Adding presale users", async () => {
 
+            it("Should fail due to uneven array lengths", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                try {
+                    await token.allocatePresaleBalances([accounts[i]], [1, 2]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
 
             it("Should give 100 presale users 1 Token Each, one at a time", async () => {
                 const token = await ParticipantAdditionProxy.new();
@@ -80,6 +89,16 @@ contract('ParticipantAdditionProxy', function(accounts) {
 
         context("Adding sale users", async () => {
 
+            it("Should fail due to uneven array lengths", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                try {
+                    await token.allocateSaleBalances([accounts[i]], [1, 2]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+
             it("Should give 100 sale users 1 Token Each, one at a time", async () => {
                 const token = await ParticipantAdditionProxy.new();
                 for (var i = 0; i < 100; i++) {
@@ -131,6 +150,16 @@ contract('ParticipantAdditionProxy', function(accounts) {
     describe("allocateLockedBalances", () => {
 
         context("Adding locked users", async () => {
+
+            it("Should fail due to uneven array lengths", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                try {
+                    await token.allocateLockedBalances([accounts[i]], [1, 2]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
 
             it("Should give 1 locked users 1 Token Each, one at a time", async () => {
                 const token = await ParticipantAdditionProxy.new();
@@ -191,7 +220,7 @@ contract('ParticipantAdditionProxy', function(accounts) {
                 const presaleAdditionDone = await token.presaleAdditionDone.call();
 
                 assert.equal(presaleAdditionDone.valueOf(), true, "presaleAdditionDone is not true");
-                });
+            });
 
             it("Should not allow the presale to close before all fund have been added", async () => {
                 const token = await ParticipantAdditionProxy.new();
@@ -262,6 +291,21 @@ contract('ParticipantAdditionProxy', function(accounts) {
 
                 try {
                     await token.allocateSaleBalances([accounts[1]], [1]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+        });
+
+        context("lockedParticipantAdditionProxyOngoing", async () => {
+            it("Should set saleAdditionDone to true when all tokens have been collected", async () => {
+                const token = await ParticipantAdditionProxy.new();
+                await token.allocateLockedBalances([accounts[2]], [200 * (10**6) * 10**EXP_18]);
+                await token.endLockedParticipantAddition();
+
+                try {
+                    await token.allocateLockedBalances([accounts[1]], [1]);
                 } catch (e) {
                     return true;
                 }
