@@ -144,7 +144,7 @@ contract TokenDistribution is Ownable, StandardToken {
         endOfPhaseTimestamp[0] = _distributionStartTimestamp + PHASE_LENGTH;    // Defines the ending timestamp of phase 0
         // Defines the ending timestamp of the rest of the phases
         for (uint i = 1; i <= 10; i++) {
-            endOfPhaseTimestamp[i] = ((i + 1) *PHASE_LENGTH) + _distributionStartTimestamp;
+            endOfPhaseTimestamp[i] = ((i + 1) * PHASE_LENGTH) + _distributionStartTimestamp;
         }
     }
 
@@ -163,11 +163,11 @@ contract TokenDistribution is Ownable, StandardToken {
 
         require(tempSaleTotalSupply <= SALE_TOKEN_ALLOCATION_CAP); // Cannot allocate > 135M tokens for sale
 
-        numSaleTokensDistributed += currentParticipantAmt;  // Add to sale total token collection
+        numSaleTokensDistributed = numSaleTokensDistributed.add(currentParticipantAmt);  // Add to sale total token collection
         saleParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
 
-        assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt)); // Distributes tokens to participant
-        DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);               // Logs token creation
+        assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
+        DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);                // Logs token creation
     }
 
     /// @dev Returns block timestamp. Function needed for testing.
@@ -231,13 +231,13 @@ contract TokenDistribution is Ownable, StandardToken {
         uint256 phaseAllocation;  // Amount to distribute this phase
 
         if (phase != 1) {
-            phaseAllocation = allocationPerPhase[msg.sender];                   // Allocation
+            phaseAllocation = allocationPerPhase[msg.sender];               // Allocation
         } else {
-            phaseAllocation = allocationPerPhase[msg.sender].add(modBal);       // Allocation plus mod for first phase
+            phaseAllocation = allocationPerPhase[msg.sender].add(modBal);  // Allocation plus mod for first phase
         }
 
-        remainingAllowance[msg.sender] -= phaseAllocation;                      // Subtract the claimed tokens from the remaining allocation
-        numPresaleTokensDistributed += phaseAllocation;                         // Add to the total number of presale tokens distributed
+        remainingAllowance[msg.sender] = remainingAllowance[msg.sender].sub(phaseAllocation);                               // Subtract the claimed tokens from the remaining allocation
+        numPresaleTokensDistributed = numPresaleTokensDistributed.add(phaseAllocation);  // Add to the total number of presale tokens distributed
 
         // If this is the last phase, isVesting flag turns to 1 (aka false)
         if (phase == 10) {
@@ -295,7 +295,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
         require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP); // Cannot allocate > 200M tokens for locked
 
-        numLockedTokensDistributed += currentParticipantAmt;  // Add to locked total token collection
+        numLockedTokensDistributed = numLockedTokensDistributed.add(currentParticipantAmt);  // Add to locked total token collection
         lockedParticipantCollected[msg.sender] = true;        // User cannot collect tokens again
 
         assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));   // Distributes tokens to participant
