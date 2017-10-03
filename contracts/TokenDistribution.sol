@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
 import {SafeMath} from './SafeMath.sol';
+import {Math} from './Math.sol';
 import {Ownable} from './Ownable.sol';
 import {StandardToken} from './Token.sol';
 
@@ -34,6 +35,7 @@ contract ProxyContract {
 
 contract TokenDistribution is Ownable, StandardToken {
     using SafeMath for uint;
+    using Math for uint;
 
     // Constants
     uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
@@ -165,17 +167,12 @@ contract TokenDistribution is Ownable, StandardToken {
         return whichPhase(time());
     }
 
-    /// @dev Returns the mininum of two numbers
-    function min(uint a, uint b) constant returns (uint) {
-        return a < b ? a : b;
-    }
-
     /// @dev Returns the current phase the distribution is on. Will be 1-10. Updates every 9 days
     function whichPhase(uint timestamp) constant returns (uint) {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
         ? 0
-        : min(timestamp.sub(distributionStartTimestamp) / PHASE_LENGTH, 10);  // Returns phase 1-10. If it is past phase 10, return 10
+        : (timestamp.sub(distributionStartTimestamp) / PHASE_LENGTH).min256(10);  // Returns phase 1-10. If it is past phase 10, return 10
     }
 
     /// @dev Returns the time remaining in the current phase
