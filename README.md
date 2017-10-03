@@ -36,8 +36,6 @@ in order to finalize this contract. After these are called, this contract will n
 ### Participant Claim 
 - **This contract will collect no funds**. All funds will have been collected prior to the deployment of this contract
 - 200 million total tokens distributed between presale and sale participants
-    - These tokens are initially sent to the contract in order to create all 1B tokens
-        - This is done because if a participant were to lose their key, there would never be 1B tokens created
 - Both sale and presale participants will have their balances checked by the proxy contract that is already on the
 blockchain
 - Sale participants will receive their tokens immediately upon calling a function to claim them
