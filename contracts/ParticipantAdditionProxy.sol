@@ -24,9 +24,6 @@ contract ParticipantAdditionProxy is Ownable {
     mapping(address => uint256) public presaleBalances;                // Save presale participant balances
     mapping(address => uint256) public saleBalances;                   // Save sale participant balances
     mapping(address => uint256) public lockedBalances;                 // Save sale participant balances
-    mapping(address => bool)    public presaleParticipantAllocated;    // Presale participant has already been allocated
-    mapping(address => bool)    public saleParticipantAllocated;       // Sale participant has already been allocated
-    mapping(address => bool)    public lockedParticipantAllocated;     // Locked participant has already been allocated
 
     // Modifiers
 
@@ -65,12 +62,11 @@ contract ParticipantAdditionProxy is Ownable {
         require(approvedPresaleParticipants.length == approvedPresaleParticipantsAllocations.length);   // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 i = 0; i < approvedPresaleParticipants.length; i++) {
-            require(!presaleParticipantAllocated[approvedPresaleParticipants[i]]); // Participant's funds cannot have been allocated already
+            require(presaleBalances[approvedPresaleParticipants[i]] == 0);  // Participant's funds cannot have been allocated already
 
             presaleAllocationTokenCount  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]);  // Total supply balance
             require(presaleAllocationTokenCount <= PRESALE_TOKEN_ALLOCATION_CAP);                                       // Cannot allocate > 65M tokens
 
-            presaleParticipantAllocated[approvedPresaleParticipants[i]] = true;    // Participant's funds have been allocated
             presaleBalances[approvedPresaleParticipants[i]] = approvedPresaleParticipantsAllocations[i];      // Assigns tokens to participant
         }
     }
@@ -85,12 +81,11 @@ contract ParticipantAdditionProxy is Ownable {
         require(approvedSaleParticipants.length == approvedSaleParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedSaleParticipants.length; j++) {
-            require(!saleParticipantAllocated[approvedSaleParticipants[j]]);        // Participant's funds cannot have been allocated already
+            require(saleBalances[approvedSaleParticipants[j]] == 0);  // Participant's funds cannot have been allocated already
 
             saleAllocationTokenCount  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]);  // Total supply balance
             require(saleAllocationTokenCount <= SALE_TOKEN_ALLOCATION_CAP);                                    // Cannot allocate > 135M tokens
 
-            saleParticipantAllocated[approvedSaleParticipants[j]] = true;          // Participant's funds have been allocated
             saleBalances[approvedSaleParticipants[j]] = approvedSaleParticipantsAllocations[j];      // Assigns tokens to participant
         }
     }
@@ -105,12 +100,11 @@ contract ParticipantAdditionProxy is Ownable {
         require(approvedLockedParticipants.length == approvedLockedParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedLockedParticipants.length; j++) {
-            require(!lockedParticipantAllocated[approvedLockedParticipants[j]]);        // Participant's funds cannot have been allocated already
+            require(lockedBalances[approvedLockedParticipants[j]] == 0);  // Participant's funds cannot have been allocated already
 
             lockedAllocationTokenCount = lockedAllocationTokenCount.add(approvedLockedParticipantsAllocations[j]);  // Total supply balance
             require(lockedAllocationTokenCount <= LOCKED_TOKEN_ALLOCATION_CAP);                                     // Cannot allocate > 200M tokens
 
-            lockedParticipantAllocated[approvedLockedParticipants[j]] = true;          // Participant's funds have been allocated
             lockedBalances[approvedLockedParticipants[j]] = approvedLockedParticipantsAllocations[j];      // Assigns tokens to participant
         }
     }
