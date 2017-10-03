@@ -53,7 +53,7 @@ contract TokenDistribution is Ownable, StandardToken {
     bool    public cancelDistribution;               // Call off distribution if something goes wrong prior to token distribution
     uint256 public numPresaleTokensDistributed;      // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;         // Number of sale tokens that have been distributed
-    uint256 public numLockedTokensDistributed;         // Number of sale tokens that have been distributed
+    uint256 public numLockedTokensDistributed;       // Number of sale tokens that have been distributed
     address public proxyContractAddress;             // Address of contract holding participant data
 
     // Timing
@@ -76,7 +76,7 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => uint256) public isVesting;                              // 0 if the user is currently vesting. 1 if they are finished.
     mapping (address => uint256) public phasesClaimed;                          // Number of claimed phases
     mapping (address => uint256) public phasesClaimable;                        // Number of phases the user can claim
-    mapping (uint => mapping (address => bool))  public  claimed;               // Sets status of claim for presale participant
+    mapping (uint => mapping (address => bool))  public  claimed;               // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
 
     mapping (uint256 => uint256) public endOfPhaseTimestamp;    // Presale participant able to claim tokens
 
