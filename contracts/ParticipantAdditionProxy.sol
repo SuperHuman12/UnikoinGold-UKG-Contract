@@ -67,9 +67,8 @@ contract ParticipantAdditionProxy is Ownable {
         for (uint256 i = 0; i < approvedPresaleParticipants.length; i++) {
             require(!presaleParticipantAllocated[approvedPresaleParticipants[i]]); // Participant's funds cannot have been allocated already
 
-            uint256 tempPresaleTotalSupply  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]); // Temp total supply balance
-            require(tempPresaleTotalSupply <= PRESALE_TOKEN_ALLOCATION_CAP);       // Cannot allocate > 65M tokens
-            presaleAllocationTokenCount = tempPresaleTotalSupply;                  // Add to presale total token allocations
+            presaleAllocationTokenCount  = presaleAllocationTokenCount.add(approvedPresaleParticipantsAllocations[i]);  // Total supply balance
+            require(presaleAllocationTokenCount <= PRESALE_TOKEN_ALLOCATION_CAP);                                       // Cannot allocate > 65M tokens
 
             presaleParticipantAllocated[approvedPresaleParticipants[i]] = true;    // Participant's funds have been allocated
             presaleBalances[approvedPresaleParticipants[i]] = approvedPresaleParticipantsAllocations[i];      // Assigns tokens to participant
@@ -88,9 +87,8 @@ contract ParticipantAdditionProxy is Ownable {
         for (uint256 j = 0; j < approvedSaleParticipants.length; j++) {
             require(!saleParticipantAllocated[approvedSaleParticipants[j]]);        // Participant's funds cannot have been allocated already
 
-            uint256 tempSaleTotalSupply  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]); // Temp total supply balance
-            require(tempSaleTotalSupply <= SALE_TOKEN_ALLOCATION_CAP);             // Cannot allocate > 135M tokens
-            saleAllocationTokenCount = tempSaleTotalSupply;                        // Add to presale total token allocations
+            saleAllocationTokenCount  = saleAllocationTokenCount.add(approvedSaleParticipantsAllocations[j]);  // Total supply balance
+            require(saleAllocationTokenCount <= SALE_TOKEN_ALLOCATION_CAP);                                    // Cannot allocate > 135M tokens
 
             saleParticipantAllocated[approvedSaleParticipants[j]] = true;          // Participant's funds have been allocated
             saleBalances[approvedSaleParticipants[j]] = approvedSaleParticipantsAllocations[j];      // Assigns tokens to participant
@@ -109,9 +107,8 @@ contract ParticipantAdditionProxy is Ownable {
         for (uint256 j = 0; j < approvedLockedParticipants.length; j++) {
             require(!lockedParticipantAllocated[approvedLockedParticipants[j]]);        // Participant's funds cannot have been allocated already
 
-            uint256 tempLockedTotalSupply  = lockedAllocationTokenCount.add(approvedLockedParticipantsAllocations[j]); // Temp total supply balance
-            require(tempLockedTotalSupply <= LOCKED_TOKEN_ALLOCATION_CAP);             // Cannot allocate > 200M tokens
-            lockedAllocationTokenCount = tempLockedTotalSupply;                        // Add to locked total token allocations
+            lockedAllocationTokenCount = lockedAllocationTokenCount.add(approvedLockedParticipantsAllocations[j]);  // Total supply balance
+            require(lockedAllocationTokenCount <= LOCKED_TOKEN_ALLOCATION_CAP);                                     // Cannot allocate > 200M tokens
 
             lockedParticipantAllocated[approvedLockedParticipants[j]] = true;          // Participant's funds have been allocated
             lockedBalances[approvedLockedParticipants[j]] = approvedLockedParticipantsAllocations[j];      // Assigns tokens to participant
