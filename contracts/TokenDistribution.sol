@@ -37,6 +37,12 @@ contract TokenDistribution is Ownable, StandardToken {
     using SafeMath for uint;
     using Math for uint;
 
+    // Metadata
+    string public constant name = "UnikoinGold";
+    string public constant symbol = "UKG";
+    uint256 public constant decimals = 18;
+    string public version = "0.9";
+
     // Constants
     uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
     uint256 public constant PHASE_LENGTH = 9 days;                                     // Length of the phase
