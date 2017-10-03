@@ -62,6 +62,7 @@ contract ParticipantAdditionProxy is Ownable {
     onlyOwner
     presaleParticipantAdditionOngoing
     {
+        require(approvedPresaleParticipants.length == approvedPresaleParticipantsAllocations.length);   // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 i = 0; i < approvedPresaleParticipants.length; i++) {
             require(!presaleParticipantAllocated[approvedPresaleParticipants[i]]); // Participant's funds cannot have been allocated already
@@ -82,6 +83,7 @@ contract ParticipantAdditionProxy is Ownable {
     onlyOwner
     saleParticipantAdditionOngoing
     {
+        require(approvedSaleParticipants.length == approvedSaleParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedSaleParticipants.length; j++) {
             require(!saleParticipantAllocated[approvedSaleParticipants[j]]);        // Participant's funds cannot have been allocated already
@@ -102,6 +104,7 @@ contract ParticipantAdditionProxy is Ownable {
     onlyOwner
     lockedParticipantAdditionOngoing
     {
+        require(approvedLockedParticipants.length == approvedLockedParticipantsAllocations.length);  // The arrays passed in must be of equal length
         // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
         for (uint256 j = 0; j < approvedLockedParticipants.length; j++) {
             require(!lockedParticipantAllocated[approvedLockedParticipants[j]]);        // Participant's funds cannot have been allocated already
