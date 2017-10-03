@@ -130,6 +130,7 @@ contract TokenDistribution is Ownable, StandardToken {
         CreateUKGEvent(this, TOTAL_COMMUNITY_ALLOCATION + LOCKED_TOKEN_ALLOCATION_CAP);  // Logs token creation
         balances[ukgDepositAddr] = UKG_FUND;               // Deposit Unikrn funds that are preallocated to the Unikrn team
         CreateUKGEvent(ukgDepositAddr, UKG_FUND);          // Logs Unikrn fund
+        totalSupply = TOTAL_COMMUNITY_ALLOCATION + LOCKED_TOKEN_ALLOCATION_CAP + UKG_FUND;  // 1BN tokens in ERC20 totalSupply
         endOfPhaseTimestamp[0] = _distributionStartTimestamp + PHASE_LENGTH;    // Defines the ending timestamp of phase 0
         // Defines the ending timestamp of the rest of the phases
         for (uint i = 1; i <= 10; i++) {
