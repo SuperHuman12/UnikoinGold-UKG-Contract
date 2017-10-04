@@ -1,7 +1,7 @@
 pragma solidity ^0.4.15;
 
-import {SafeMath} from './SafeMath.sol';
-import {Ownable} from './Ownable.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 contract ParticipantAdditionProxy is Ownable {
     using SafeMath for uint;

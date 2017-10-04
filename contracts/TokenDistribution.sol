@@ -1,9 +1,9 @@
 pragma solidity ^0.4.15;
 
-import {SafeMath} from './SafeMath.sol';
-import {Math} from './Math.sol';
-import {Ownable} from './Ownable.sol';
-import {StandardToken} from './Token.sol';
+import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/math/Math.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'zeppelin-solidity/contracts/token/StandardToken.sol';
 
 /**
   * - Contracts
