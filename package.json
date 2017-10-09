@@ -1,0 +1,22 @@
+{
+  "name": "ukg-distrbution",
+  "version": "1.0.0",
+  "description": "This repository defines the UnikoinGold token distribution flow and provides additional information surrounding the distribution of UKG.",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "author": "Shane Fontaine <shane@coincircle.com>",
+  "devDependencies": {
+    "ethereumjs-testrpc": "^4.1.3",
+    "truffle": "^3.4.9"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CoinCircle/ukg-distrbution/issues"
+  },
+  "homepage": "https://github.com/CoinCircle/ukg-distrbution#readme",
+  "dependencies": {
+    "zeppelin-solidity": "^1.3.0"
+  }
+}

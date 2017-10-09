@@ -87,3 +87,22 @@ claimPresaleTokens() | `external` `notCanceled` `distributionStarted` `presaleTo
 claimAllAvailableTokens() | `notCanceled` `distributionStarted` | Function to call that allows user to claim both sale and presale tokens available at the current time
 claimLockedTokens() | `notCanceled` `distributionStarted` `lockupOver` `lockedTokensStillAvailable` | Distributes tokens to locked up participants.
 cancelDistribution() | `external` `onlyOwner` `notFrozen` | Cancels distribution if a false parameter is entered.
+
+## Setup
+
+### Installation
+```
+npm install -g truffle testrpc && npm install
+```
+
+Before running tests and interacting with the contract, make sure you are running testrpc to simulate the blockchain:
+```
+testrpc
+```
+
+
+### Testing
+Run all tests:
+```
+truffle test
+```
