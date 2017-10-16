@@ -44,14 +44,13 @@ contract TokenDistribution is Ownable, StandardToken {
     string public version = "0.9";
 
     // Constants
-    uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
-    uint256 public constant PHASE_LENGTH = 9 days;                                     // Length of the phase
-    uint256 public constant MAX_PHASES = 10;                                           // Maximum number of phases
-    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
-    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
-    uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**EXP_18;   // 200M tokens to be distributed to community
-    uint256 public constant LOCKED_TOKEN_ALLOCATION_CAP = 200 * (10**6) * 10**EXP_18;  // 200M tokens distributed after sale distribution
-    uint256 public constant UKG_FUND = 600 * (10**6) * 10**EXP_18;                     // 600M UKG reserved for Unikrn use
+    uint256 public constant PHASE_LENGTH = 9 days;                                       // Length of the phase
+    uint256 public constant MAX_PHASES = 10;                                             // Maximum number of phases
+    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**decimals;  // 65M tokens distributed after sale distribution
+    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**decimals;    // 135M tokens distributed after sale distribution
+    uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**decimals;   // 200M tokens to be distributed to community
+    uint256 public constant LOCKED_TOKEN_ALLOCATION_CAP = 200 * (10**6) * 10**decimals;  // 200M tokens distributed after sale distribution
+    uint256 public constant UKG_FUND = 600 * (10**6) * 10**decimals;                     // 600M UKG reserved for Unikrn use
 
     // Secure wallets
     address public ukgDepositAddr;              // Deposit address for UKG for Unikrn
