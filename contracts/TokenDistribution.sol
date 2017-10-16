@@ -187,11 +187,11 @@ contract TokenDistribution is Ownable, StandardToken {
             ProxyContract participantData = ProxyContract(proxyContractAddress);
             presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
 
-            require(presaleParticipantAllowedAllocation[msg.sender] != 0);                             // User must have participated in the presale
+            require(presaleParticipantAllowedAllocation[msg.sender] != 0);                                     // User must have participated in the presale
 
-            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % 10;                     // Calculates how many extra tokens to distribute for first phase. Mod 10 for max of 10 phases
-            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(10);  // Calculates how many tokens collectible per phase. Divide by 10 for max of 10 phases.
-            remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];          // Number of tokens to receive
+            uint256 modBal = presaleParticipantAllowedAllocation[msg.sender] % MAX_PHASES;                     // Calculates how many extra tokens to distribute for first phase. Mod 10 for max of 10 phases
+            allocationPerPhase[msg.sender] = presaleParticipantAllowedAllocation[msg.sender].div(MAX_PHASES);  // Calculates how many tokens collectible per phase. Divide by 10 for max of 10 phases.
+            remainingAllowance[msg.sender] = presaleParticipantAllowedAllocation[msg.sender];                  // Number of tokens to receive
         }
 
         // If the participant has claimed for this phase, return
