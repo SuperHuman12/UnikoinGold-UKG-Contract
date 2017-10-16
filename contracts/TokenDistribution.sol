@@ -79,7 +79,6 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => uint256) public remainingAllowance;                   // Amount of tokens presale participant has left to claim
     mapping (address => bool) public saleParticipantCollected;                // Sale user has collected all funds bool
     mapping (address => bool) public lockedParticipantCollected;              // Locked user has collected all funds bool
-    mapping (address => uint256) public isVesting;                            // 0 if the user is currently vesting. 1 if they are finished.
     mapping (address => uint256) public phasesClaimed;                        // Number of claimed phases
     mapping (uint => mapping (address => bool))  public  claimed;             // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
 
@@ -227,11 +226,6 @@ contract TokenDistribution is Ownable, StandardToken {
 
         remainingAllowance[msg.sender] = remainingAllowance[msg.sender].sub(phaseAllocation);  // Subtract the claimed tokens from the remaining allocation
         numPresaleTokensDistributed = numPresaleTokensDistributed.add(phaseAllocation);        // Add to the total number of presale tokens distributed
-
-        // If this is the last phase, isVesting flag turns to 1 (aka false)
-        if (phase == 10) {
-            isVesting[msg.sender] = 1;
-        }
 
         // Define user statistics for web3 use
         phasesClaimed[msg.sender] = phase;

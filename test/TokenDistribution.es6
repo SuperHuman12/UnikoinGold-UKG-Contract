@@ -446,8 +446,7 @@ contract('TokenDistribution', function(accounts) {
     8.✔Should add the phaseAllocation to the numPresaleTokensDistributed
     9.✔Should distribute the entire balance of tokens to a user after the 10th phase
     10.✔Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase
-    11.✔Should return isVesting = 0 until a user has claimed for 10 phases
-    12.✔Should return the number of phases that have been collected by the user
+    11.✔Should return the number of phases that have been collected by the user
      */
 
     describe("claimPresaleTokensIterate", () => {
@@ -625,37 +624,6 @@ contract('TokenDistribution', function(accounts) {
             const balance = await token.balanceOf.call(ACCOUNT1);
 
             assert.equal(balance.valueOf(), 200, "Not the correct value");
-        });
-
-        it("Should return isVesting = 0 until a user has claimed for 10 phases", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
-            const VAL = 1000001;
-
-            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
-
-            await token.claimPresaleTokens({from: ACCOUNT1});
-            const isVesting0 = await token.isVesting.call(ACCOUNT1);
-
-            assert.equal(isVesting0.valueOf(), 0, "Not the correct value");
-
-            // Need to get into phase 1
-            await increaseTime(DAY * 10);
-            await mine();
-
-            await token.claimPresaleTokens({from: ACCOUNT1});
-            const isVesting1 = await token.isVesting.call(ACCOUNT1);
-
-            assert.equal(isVesting1.valueOf(), 0, "Not the correct value");
-
-            // Need to get into phase 10
-            await increaseTime(DAY * 90);
-            await mine();
-
-            await token.claimPresaleTokens({from: ACCOUNT1});
-            const isVesting2 = await token.isVesting.call(ACCOUNT1);
-
-            assert.equal(isVesting2.valueOf(), 1, "Not the correct value");
         });
 
         it("Should return the number of phases that have been collected by the user", async () => {
