@@ -59,13 +59,13 @@ contract TokenDistribution is Ownable, StandardToken {
     bool    public cancelDistribution;          // Call off distribution if something goes wrong prior to token distribution
     uint256 public numPresaleTokensDistributed; // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;    // Number of sale tokens that have been distributed
-    uint256 public numLockedTokensDistributed;  // Number of sale tokens that have been distributed
+    uint256 public numLockedTokensDistributed;  // Number of locked tokens that have been distributed
     address public proxyContractAddress;        // Address of contract holding participant data
 
     // Timing
     uint256 public freezeTimestamp;             // Time where owner can no longer destroy the contract
     uint256 public distributionStartTimestamp;  // Time to begin distribution
-    uint256 public lockupTimestamp;             // Time to begin distribution
+    uint256 public lockupTimestamp;             // Time to end lockup
 
     // Events
     event CreateUKGEvent(address indexed _to, uint256 _value);                // Logs the creation of the token
