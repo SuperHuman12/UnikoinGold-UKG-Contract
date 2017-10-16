@@ -10,30 +10,24 @@ contract ParticipantAdditionProxy is Ownable {
     uint256 public constant EXP_18 = 18;                                               // Used to convert Wei to ETH
     uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
-    uint256 public constant LOCKED_TOKEN_ALLOCATION_CAP = 200 * (10**6) * 10**EXP_18;  // 200M tokens locked
 
     // Parameters
     bool    public presaleAdditionDone;          // State of presale addition
     bool    public saleAdditionDone;             // Finalizes sale participant addition
-    bool    public lockedAdditionDone;           // Finalizes locked participant addition
     uint256 public presaleAllocationTokenCount;  // Counts presale tokens allocated. Used as safety check.
     uint256 public saleAllocationTokenCount;     // Counts sale tokens allocated. Used as safety check.
-    uint256 public lockedAllocationTokenCount;   // Counts locked tokens allocated. Used as safety check.
 
     // Mapping
     mapping(address => uint256) public presaleBalances;  // Save presale participant balances
     mapping(address => uint256) public saleBalances;     // Save sale participant balances
-    mapping(address => uint256) public lockedBalances;   // Save sale participant balances
 
     /// @dev ParticipantAddition(): Constructor for the participant addition contract
     function ParticipantAdditionProxy()
     {
         saleAdditionDone = false;         // Sale participants not yet added
         presaleAdditionDone = false;      // Presale participants not yet added
-        lockedAdditionDone = false;       // Locked participants not yet added
         presaleAllocationTokenCount = 0;  // No presale tokens allocated initially
         saleAllocationTokenCount = 0;     // No sale tokens allocated initially
-        lockedAllocationTokenCount = 0;   // No locked tokens allocated initially
     }
 
     /// @dev Distribute tokens to sale participants immediately
@@ -74,25 +68,6 @@ contract ParticipantAdditionProxy is Ownable {
         }
     }
 
-    /// @dev Distribute tokens to locked participants immediately
-    /// @param approvedLockedParticipants Array of locked participants
-    /// @param approvedLockedParticipantsAllocations Array of allocations
-    function allocateLockedBalances(address[] approvedLockedParticipants, uint256[] approvedLockedParticipantsAllocations)
-    onlyOwner
-    {
-        require(!lockedAdditionDone);  // Locked participant allocation cannot be completed
-        require(approvedLockedParticipants.length == approvedLockedParticipantsAllocations.length);  // The arrays passed in must be of equal length
-        // Does not need to be global variable since they are saved in mapping. Can use as many arrays/tx as needed.
-        for (uint256 j = 0; j < approvedLockedParticipants.length; j++) {
-            require(lockedBalances[approvedLockedParticipants[j]] == 0);  // Participant's funds cannot have been allocated already
-
-            lockedAllocationTokenCount = lockedAllocationTokenCount.add(approvedLockedParticipantsAllocations[j]);  // Total supply balance
-            require(lockedAllocationTokenCount <= LOCKED_TOKEN_ALLOCATION_CAP);                                     // Cannot allocate > 200M tokens
-
-            lockedBalances[approvedLockedParticipants[j]] = approvedLockedParticipantsAllocations[j];  // Assigns tokens to participant
-        }
-    }
-
     /**
      * State Definition Functions
      **/
@@ -118,17 +93,6 @@ contract ParticipantAdditionProxy is Ownable {
         saleAdditionDone = true;
     }
 
-    /// @dev Signals the end of the locked participant addition
-    /// @notice call when all locked participants have been added and checked
-    function endLockedParticipantAddition()
-    onlyOwner
-    {
-        require(lockedAllocationTokenCount == LOCKED_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 200M tokens
-        // Need to have allocated all tokens
-
-        lockedAdditionDone = true;
-    }
-
     /**
      * Balance Functions
      **/
@@ -139,9 +103,5 @@ contract ParticipantAdditionProxy is Ownable {
 
     function balanceOfSaleParticipants(address _owner) constant returns (uint256 balance) {
         return saleBalances[_owner];
-    }
-
-    function balanceOfLockedParticipants(address _owner) constant returns (uint256 balance) {
-        return lockedBalances[_owner];
     }
 }

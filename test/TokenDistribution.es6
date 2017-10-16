@@ -42,33 +42,33 @@ contract('TokenDistribution', function(accounts) {
     describe("initialization", () => {
 
         it("Should not allow distributionStartTimestamp to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.ukgDepositAddr.call();
             assert.notEqual(addr, 0, "distributionStartTimestamp was not initialized.");
         });
 
         it("Should not allow distributionStartTimestamp to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.distributionStartTimestamp.call();
             assert.notEqual(addr, 0, "distributionStartTimestamp was not initialized.");
         });
 
         it("Should not allow freezeTimestamp to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.freezeTimestamp.call();
 
             assert.notEqual(addr.valueOf(), 0, "freezeTimestamp was not initialized.");
         });
 
         it("Should not allow proxyContractAddress to be initialized to 0", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const addr = await token.proxyContractAddress.call();
             assert.notEqual(addr, ACCOUNT0, "proxyContractAddress was not initialized.");
         });
 
         it("Should not allow freezeTimstamp to be initialized after distributionTimestamp", async () => {
             try {
-                await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now - 5, now + 15);
+                await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now - 5);
             }
             catch (e) {
                 return true;
@@ -76,16 +76,16 @@ contract('TokenDistribution', function(accounts) {
             assert.fail("The function executed when it should not have.")
         });
 
-        it("Should initiate Unikrn account with 600M UKG", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+        it("Should initiate Unikrn account with 800M UKG", async () => {
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const balance = await token.balanceOf.call(ACCOUNT0);
-            assert.equal(balance.valueOf(), 600 * 10**6 * 10**EXP_18, "600M UKG wasn't in the first account.");
+            assert.equal(balance.valueOf(), 800 * 10**6 * 10**EXP_18, "600M UKG wasn't in the first account.");
         });
 
-        it("Should initiate the contract with 400M UKG", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+        it("Should initiate the contract with 200M UKG", async () => {
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const balance = await token.balanceOf.call(token.address);
-            assert.equal(balance.valueOf(), 400 * 10**6 * 10**EXP_18, "600M UKG wasn't in the first account.");
+            assert.equal(balance.valueOf(), 200 * 10**6 * 10**EXP_18, "600M UKG wasn't in the first account.");
         });
     });
 
@@ -102,7 +102,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should allow users to claim their funds from the sale", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5);
 
             await proxy.allocateSaleBalances([PROXY_ADDRESS], [1]);
             await token.claimSaleTokens({from:PROXY_ADDRESS});
@@ -112,7 +112,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should throw because the user has already collected their funds", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5);
 
             await proxy.allocateSaleBalances([ACCOUNT1], [1]);
             await token.claimSaleTokens({from:ACCOUNT1});
@@ -127,7 +127,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should update numSaleTokensDistributed with user's allocation", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5);
             const VAL = 1;
 
             await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
@@ -139,7 +139,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should throw if all 135M tokens have been distributed", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5);
             const VAL = 135 * (10**6) * 10**EXP_18;
 
             await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
@@ -181,7 +181,7 @@ contract('TokenDistribution', function(accounts) {
     describe("currentPhase", () => {
 
         it("Should return phase 0 upon contract deployment", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.currentPhase.call();
             assert.equal(phase.valueOf(), 0, "Not the right phase.");
         });
@@ -218,133 +218,133 @@ contract('TokenDistribution', function(accounts) {
     describe("whichPhase", () => {
 
         it("Should return phase 0, as this is upon contract creation", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now);
             assert.equal(phase.valueOf(), 0, "Not the right phase");
         });
 
         it("Should return phase 0 on day 9 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 9 * DAY - HOUR);
             assert.equal(phase.valueOf(), 0, "Not the right phase");
         });
 
         it("Should return phase 1 on day 9 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 9 * DAY + HOUR);
             assert.equal(phase.valueOf(), 1, "Not the right phase");
         });
 
         it("Should return phase 1 on day 18 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 18 * DAY - HOUR);
             assert.equal(phase.valueOf(), 1, "Not the right phase");
         });
 
         it("Should return phase 2 on day 18 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 18 * DAY + HOUR);
             assert.equal(phase.valueOf(), 2, "Not the right phase");
         });
 
         it("Should return phase 2 on day 27 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 27 * DAY - HOUR);
             assert.equal(phase.valueOf(), 2, "Not the right phase");
         });
 
         it("Should return phase 3 on day 27 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 27 * DAY + HOUR);
             assert.equal(phase.valueOf(), 3, "Not the right phase");
         });
 
         it("Should return phase 3 on day 36 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 36 * DAY - HOUR);
             assert.equal(phase.valueOf(), 3, "Not the right phase");
         });
 
         it("Should return phase 4 on day 36 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 36 * DAY + HOUR);
             assert.equal(phase.valueOf(), 4, "Not the right phase");
         });
 
         it("Should return phase 4 on day 45 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 45 * DAY - HOUR);
             assert.equal(phase.valueOf(), 4, "Not the right phase");
         });
 
         it("Should return phase 5 on day 45 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 45 * DAY +  HOUR);
             assert.equal(phase.valueOf(), 5, "Not the right phase");
         });
 
         it("Should return phase 5 on day 54 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 54 * DAY - HOUR);
             assert.equal(phase.valueOf(), 5, "Not the right phase");
         });
 
         it("Should return phase 6 on day 54 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 54 * DAY + HOUR);
             assert.equal(phase.valueOf(), 6, "Not the right phase");
         });
 
         it("Should return phase 6 on day 63 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 63 * DAY - HOUR);
             assert.equal(phase.valueOf(), 6, "Not the right phase");
         });
 
         it("Should return phase 7 on day 63 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 63 * DAY + HOUR);
             assert.equal(phase.valueOf(), 7, "Not the right phase");
         });
 
         it("Should return phase 7 on day 72 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 72 * DAY - HOUR);
             assert.equal(phase.valueOf(), 7, "Not the right phase");
         });
 
         it("Should return phase 8 on day 72 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 72 * DAY + HOUR);
             assert.equal(phase.valueOf(), 8, "Not the right phase");
         });
 
         it("Should return phase 8 on day 81 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 81 * DAY - HOUR);
             assert.equal(phase.valueOf(), 8, "Not the right phase");
         });
 
         it("Should return phase 9 on day 81 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 81 * DAY + HOUR);
             assert.equal(phase.valueOf(), 9, "Not the right phase");
         });
 
         it("Should return phase 9 on day 90 - 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 90 * DAY - HOUR);
             assert.equal(phase.valueOf(), 9, "Not the right phase");
         });
 
         it("Should return phase 10 on day 90 + 1 hour", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + 90 * DAY + HOUR);
             assert.equal(phase.valueOf(), 10, "Not the right phase");
         });
 
         it("Should return phase 10, as the function returns 10 at any point after 90 days", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             const phase = await token.whichPhase.call(now + YEAR);
             assert.equal(phase.valueOf(), 10, "Not the right phase");
         });
@@ -362,7 +362,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return the remaining time in phase 0", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 3, now - 2, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 3, now - 2);
             var shouldBe1 = 9 * DAY;
 
             let remainingTime1 = await token.timeRemainingInPhase.call();
@@ -378,7 +378,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return the remaining time in other phases", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 3, now - 2, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 3, now - 2);
             const shouldBe1 = (27 * DAY) - (20 * DAY);
             const shouldBe2 = (45 * DAY) - (40 * DAY);
 
@@ -409,7 +409,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return the number of phases a user still has to claim", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -452,7 +452,7 @@ contract('TokenDistribution', function(accounts) {
     describe("claimPresaleTokensIterate", () => {
 
         it("Should only be callable internally", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
             try {
                 await token.claimPresaleTokensIterate();
             } catch (e) {
@@ -464,7 +464,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should pull participant data from proxy contract on 1st iteration", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000000;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -481,7 +481,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should throw if the usser did not participate in the presale", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
 
             const VAL = 1000000;
 
@@ -502,7 +502,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should calculate allocationPerPhase as 10% of their total allocation", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000000;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -519,7 +519,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should add the modulo to the allocation on the first phase", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -536,7 +536,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should not add the modulo to the allocation after the first phase", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -553,7 +553,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should subtract the phaseAllocation from the participant's remainingAllownace", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -570,7 +570,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should add the phaseAllocation to the numPresaleTokensDistributed", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -587,7 +587,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should distribute the entire balance of tokens to a user after the 10th phase", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000001;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -604,7 +604,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return to claimPresaleTokens function (and iterate again) if the user has claimed for that phase", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -628,7 +628,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should return the number of phases that have been collected by the user", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 1000000;
 
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -668,7 +668,7 @@ contract('TokenDistribution', function(accounts) {
 
         it("Should execute claimSaleTokens and claimPresaleTokens successfully", async () => {
             const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
             const VAL = 100;
             await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
@@ -698,79 +698,6 @@ contract('TokenDistribution', function(accounts) {
         });
     });
 
-
-    ////////////////////////
-    // claimLockupTokens //
-    //////////////////////
-    /*
-    1.✔Should not allow lockup users to claim their funds from the sale at the beginning
-    2.✔Should allow lockup users to claim their funds from the sale after a year
-    3.✔numLockedTokensDistributed should update with user's allocation
-     */
-
-    describe("claimLockupTokens", () => {
-
-        it("Should not allow lockup users to claim their funds from the sale at the beginning", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now + 1);
-            await proxy.allocateLockedBalances([PROXY_ADDRESS], [1]);
-            try {
-                await token.claimLockedTokens({from:PROXY_ADDRESS});
-            } catch (e) {
-                return true
-            }
-            assert.fail("The function executed when it should not have.")
-        });
-
-        it("Should allow lockup users to claim their funds from the sale after a year", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now - 1);
-            await proxy.allocateLockedBalances([PROXY_ADDRESS], [1]);
-
-            await token.claimLockedTokens({from:PROXY_ADDRESS});
-            const balance = await token.balanceOf.call(PROXY_ADDRESS);
-
-            assert.equal(balance.valueOf(), 1, "DIDN'T WORK.");
-        });
-
-        it("Should allow users to claim their funds from the locked period", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now - 1);
-
-            await proxy.allocateLockedBalances([PROXY_ADDRESS], [1]);
-            await token.claimLockedTokens({from:PROXY_ADDRESS});
-            const balance = await token.balanceOf.call(PROXY_ADDRESS);
-            assert.equal(balance.valueOf(), 1, "DIDN'T WORK.");
-        });
-
-        it("Should throw because the user has already collected their funds", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now - 1);
-
-            await proxy.allocateLockedBalances([ACCOUNT1], [1]);
-            await token.claimLockedTokens({from:ACCOUNT1});
-
-            try {
-                await token.claimLockedTokens({from:ACCOUNT1});
-            } catch (e) {
-                return true;
-            }
-            assert.fail("The function executed when it should not have.")
-        });
-
-        it("Should throw if all 200M tokens have been distributed", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10 , now - 5, now - 1);
-            const VAL = 1;
-
-            await proxy.allocateLockedBalances([ACCOUNT1], [VAL]);
-            await token.claimLockedTokens({from:ACCOUNT1});
-
-            const numLockedTokensDistributed = await token.numLockedTokensDistributed.call();
-            assert.equal(numLockedTokensDistributed.valueOf(), VAL, "DIDN'T WORK.");
-        });
-    });
-
     /////////////////
     // cancelDist //
     ///////////////
@@ -781,7 +708,7 @@ contract('TokenDistribution', function(accounts) {
     describe("cancelDist", () => {
 
         it("Should change cancelDistribution to true if executed correctly", async () => {
-            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000, now + 10000);
+            const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000);
             await token.cancelDist({from:ACCOUNT0});
             const cancel_var = await token.cancelDistribution.call();
             assert.equal(cancel_var.valueOf(), true, "Did not go through.");
@@ -804,7 +731,7 @@ contract('TokenDistribution', function(accounts) {
         context("onlyOwner", async () => {
 
             it("Should throw if not called by the owner", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10, now + 15);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 5, now + 10);
                 try {
                     await token.cancelDist({from: ACCOUNT1});
                 } catch (e) {
@@ -817,7 +744,7 @@ contract('TokenDistribution', function(accounts) {
         context("notCanceled", async () => {
 
             it("Should throw claimSaleTokens() with notCanceled modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000, now + 10000);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000);
                 await token.cancelDist({from:ACCOUNT0});
                 try {
                     await token.claimSaleTokens.call();
@@ -828,7 +755,7 @@ contract('TokenDistribution', function(accounts) {
             });
 
             it("Should throw claimPresaleTokens() with notCanceled modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000, now + 10000);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now + 100, now + 1000);
                 await token.cancelDist({from:ACCOUNT0});
                 try {
                     await token.claimPresaleTokens.call();
@@ -842,7 +769,7 @@ contract('TokenDistribution', function(accounts) {
         context("notFrozen", async () => {
 
             it("Should throw cancelDist() with notFrozen modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now - 5, now - 1);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now - 5);
                 try {
                     await token.cancelDist({from:ACCOUNT0});
                 } catch (e) {
@@ -855,7 +782,7 @@ contract('TokenDistribution', function(accounts) {
         context("distributionStarted", async () => {
 
             it("Should throw claimSaleTokens() with distributionStarted modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now + 5, now + 15);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now + 5);
                 try {
                     await token.claimSaleTokens.call();
                 } catch (e) {
@@ -865,7 +792,7 @@ contract('TokenDistribution', function(accounts) {
             });
 
             it("Should throw claimPresaleTokens() with distributionStarted modifier", async () => {
-                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now + 5, now + 15);
+                const token = await TokenDistribution.new(ACCOUNT0, PROXY_ADDRESS, now - 10, now + 5);
                 try {
                     await token.claimPresaleTokens.call();
                 } catch (e) {
@@ -879,7 +806,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimSaleTokens() with saleTokensStillAvailable modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
-                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now + 15);
+                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
 
                 await proxy.allocateSaleBalances([ACCOUNT1], [135 * (10**6) * 10**EXP_18]);
                 await token.claimSaleTokens({from:ACCOUNT1});
@@ -897,7 +824,7 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimPresaleTokens() with saleTokensStillAvailable modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
-                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5, now - 1);
+                const token = await TokenDistribution.new(ACCOUNT0, proxy.address, now - 10, now - 5);
 
                 // Need to push presale forward a 90+ days in order to get to the last phase
                 await increaseTime(YEAR);

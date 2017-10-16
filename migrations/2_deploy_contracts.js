@@ -17,6 +17,11 @@ module.exports = function(deployer, network, accounts) {
     }
 
     if (network == 'kovandistribution') {
-        deployer.deploy(TokenDistribution, OWNER, PROXY_ADDRESS, now + (2 * DAY), now + (5 * DAY), now + (3 * YEAR));
+        deployer.deploy(TokenDistribution, OWNER, PROXY_ADDRESS, now + (2 * DAY), now + (5 * DAY));
     }
+
+
+    deployer.deploy(ParticipantAdditionProxy);
+    deployer.deploy(TokenDistribution, OWNER, PROXY_ADDRESS, now + (2 * DAY), now + (5 * DAY));
+
 };
