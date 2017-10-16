@@ -227,8 +227,7 @@ contract TokenDistribution is Ownable, StandardToken {
         remainingAllowance[msg.sender] = remainingAllowance[msg.sender].sub(phaseAllocation);  // Subtract the claimed tokens from the remaining allocation
         numPresaleTokensDistributed = numPresaleTokensDistributed.add(phaseAllocation);        // Add to the total number of presale tokens distributed
 
-        // Define user statistics for web3 use
-        phasesClaimed[msg.sender] = phase;
+        phasesClaimed[msg.sender] = phase;  // Define which phases have been claimed
 
         assert(StandardToken(this).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
         DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
