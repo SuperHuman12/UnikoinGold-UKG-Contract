@@ -81,7 +81,6 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => bool) public lockedParticipantCollected;              // Locked user has collected all funds bool
     mapping (address => uint256) public isVesting;                            // 0 if the user is currently vesting. 1 if they are finished.
     mapping (address => uint256) public phasesClaimed;                        // Number of claimed phases
-    mapping (address => uint256) public phasesClaimable;                      // Number of phases the user can claim
     mapping (uint => mapping (address => bool))  public  claimed;             // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
 
     mapping (uint256 => uint256) public endOfPhaseTimestamp;  // Presale participant able to claim tokens
