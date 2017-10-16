@@ -297,29 +297,4 @@ contract TokenDistribution is Ownable, StandardToken {
     {
         cancelDistribution = true;
     }
-
-    // FOR TESTING ONLY
-    function balanceOf(address _owner) constant returns (uint256 balance) {
-        return balances[_owner];
-    }
-
-    function presaleParticipantAllowedAllocationTest(address _participant) constant returns (uint256 allocation) {
-        return presaleParticipantAllowedAllocation[_participant];
-    }
-
-    function allocationPerPhaseTest(address _participant) constant returns (uint256 allocation) {
-        return allocationPerPhase[_participant];
-    }
-
-    function remainingAllowanceTest(address _participant) constant returns (uint256 allowance) {
-        return remainingAllowance[_participant];
-    }
-
-    function saleParticipantCollectedTest(address _participant) constant returns (bool collected) {
-        return saleParticipantCollected[_participant];
-    }
-
-    function isVestingTest(address _participant) constant returns (uint256 vesting) {
-        return isVesting[_participant];
-    }
 }

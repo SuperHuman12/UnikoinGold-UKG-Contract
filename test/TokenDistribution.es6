@@ -475,7 +475,7 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const balance = await token.presaleParticipantAllowedAllocationTest.call(ACCOUNT1);
+            const balance = await token.presaleParticipantAllowedAllocation.call(ACCOUNT1);
 
             assert.equal(balance.valueOf(), VAL, "Not the correct value");
         });
@@ -513,7 +513,7 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const balance = await token.allocationPerPhaseTest.call(ACCOUNT1);
+            const balance = await token.allocationPerPhase.call(ACCOUNT1);
 
             assert.equal(balance.valueOf(), VAL/10, "Not the correct value");
         });
@@ -635,7 +635,7 @@ contract('TokenDistribution', function(accounts) {
             await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const isVesting0 = await token.isVestingTest.call(ACCOUNT1);
+            const isVesting0 = await token.isVesting.call(ACCOUNT1);
 
             assert.equal(isVesting0.valueOf(), 0, "Not the correct value");
 
@@ -644,7 +644,7 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const isVesting1 = await token.isVestingTest.call(ACCOUNT1);
+            const isVesting1 = await token.isVesting.call(ACCOUNT1);
 
             assert.equal(isVesting1.valueOf(), 0, "Not the correct value");
 
@@ -653,7 +653,7 @@ contract('TokenDistribution', function(accounts) {
             await mine();
 
             await token.claimPresaleTokens({from: ACCOUNT1});
-            const isVesting2 = await token.isVestingTest.call(ACCOUNT1);
+            const isVesting2 = await token.isVesting.call(ACCOUNT1);
 
             assert.equal(isVesting2.valueOf(), 1, "Not the correct value");
         });
@@ -934,7 +934,6 @@ contract('TokenDistribution', function(accounts) {
                 // Need to push presale forward a 90+ days in order to get to the last phase
                 await increaseTime(YEAR);
                 await mine();
-
                 await proxy.allocatePresaleBalances([ACCOUNT1], [65 * (10 ** 6) * 10 ** EXP_18]);
                 await token.claimPresaleTokens({from: ACCOUNT1});
 
