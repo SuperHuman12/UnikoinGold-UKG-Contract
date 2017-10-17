@@ -64,8 +64,7 @@ contract('TokenDistribution', function(accounts) {
         it("Should not allow freezeTimstamp to be initialized after distributionTimestamp", async () => {
             try {
                 await TokenDistribution.new(PROXY_ADDRESS, now + 5, now - 5);
-            }
-            catch (e) {
+            } catch (e) {
                 return true;
             }
             assert.fail("The function executed when it should not have.")
@@ -91,7 +90,7 @@ contract('TokenDistribution', function(accounts) {
 
     describe("setTokenAddress", () => {
 
-        it("Should throw if tokenAddress has already been set", async () => {
+        it("Should set the proper tokenAddress", async () => {
             const distribution = await TokenDistribution.new(PROXY_ADDRESS, now + 5, now + 10);
             await distribution.setTokenAddress(ACCOUNT1);
 
@@ -433,7 +432,7 @@ contract('TokenDistribution', function(accounts) {
 
             let remainingTime1 = await distribution.timeRemainingInPhase.call();
 
-            assert.closeTo(Number(remainingTime1).valueOf(), shouldBe1, 5, "Not the correct value");
+            assert.closeTo(Number(remainingTime1).valueOf(), shouldBe1, 10, "Not the correct value");
 
             //Fast Forward to Phase 4
             await increaseTime(20 * DAY);
@@ -543,8 +542,7 @@ contract('TokenDistribution', function(accounts) {
 
             try {
                 await distribution.claimPresaleTokens({from: ACCOUNT2});
-            }
-            catch (e) {
+            } catch (e) {
                 return true;
             }
             assert.fail("The function executed when it should not have.")
