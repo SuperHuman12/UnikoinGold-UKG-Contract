@@ -96,8 +96,8 @@ contract TokenDistribution is Ownable, StandardToken {
     function TokenDistribution(address _proxyContractAddress, uint256 _freezeTimestamp, uint256 _distributionStartTimestamp)
     {
         require(_proxyContractAddress != 0);               // Proxy contract must be defined
-        require(_distributionStartTimestamp != 0);         // Start timestamp must be defined
         require(_freezeTimestamp != 0);                    // Freeze timestamp must be defined
+        require(_distributionStartTimestamp != 0);         // Start timestamp must be defined
         require(_freezeTimestamp < _distributionStartTimestamp);  // Freeze timestamp must occur before the distributionStartTimestamp
 
         tokenAddressSet = false;                           // Token address is not set initially
@@ -136,15 +136,15 @@ contract TokenDistribution is Ownable, StandardToken {
 
         ProxyContract participantData = ProxyContract(proxyContractAddress);
 
-        uint256 currentParticipantAmt = participantData.saleBalances(msg.sender);  // Number of tokens to receive
-        numSaleTokensDistributed  = numSaleTokensDistributed.add(currentParticipantAmt);        // Number of sale tokens distributed
+        uint256 currentParticipantAmt = participantData.saleBalances(msg.sender);                // Number of tokens to receive
+        numSaleTokensDistributed  = numSaleTokensDistributed.add(currentParticipantAmt);         // Number of sale tokens distributed
 
         require(numSaleTokensDistributed <= SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens for sale
 
         saleParticipantCollected[msg.sender] = true;  // User cannot collect tokens again
 
         assert(StandardToken(tokenAddress).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
-        DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);                // Logs token creation
+        DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);                        // Logs token creation
     }
 
     /// @dev Returns block timestamp. Function needed for testing.
@@ -152,12 +152,13 @@ contract TokenDistribution is Ownable, StandardToken {
         return block.timestamp;
     }
 
-    /// @dev Returns phase number of the distrbution
+    /// @dev Returns phase number of the distribution
     function currentPhase() constant returns (uint) {
         return whichPhase(time());
     }
 
     /// @dev Returns the current phase the distribution is on. Will be 1-10. Updates every 9 days
+    /// @param timestamp Timestamp of current time
     function whichPhase(uint timestamp) constant returns (uint) {
         // if the time is less than the start time, return 0. or else return the new time.
         return timestamp < distributionStartTimestamp
@@ -171,6 +172,7 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev Returns the number of phases a participant has available to claim
+    /// @param participant Participant that is being checked
     function phasesClaimable(address participant) constant returns (uint) {
         return currentPhase().sub(phasesClaimed[participant]);
     }
@@ -215,7 +217,7 @@ contract TokenDistribution is Ownable, StandardToken {
         phasesClaimed[msg.sender] = phase;  // Define which phases have been claimed
 
         assert(StandardToken(tokenAddress).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
-        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
+        DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);              // Logs the user claiming their tokens
     }
 
 
