@@ -4,6 +4,7 @@ import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/math/Math.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'zeppelin-solidity/contracts/token/StandardToken.sol';
+import './UnikoinGold.sol';
 
 /**
   * - Contracts
@@ -39,27 +40,19 @@ contract TokenDistribution is Ownable, StandardToken {
     using SafeMath for uint;
     using Math for uint;
 
-    // Metadata
-    string public constant name = "UnikoinGold";
-    string public constant symbol = "UKG";
-    uint8 public constant decimals = 18;
-    string public version = "0.9";
-
     // Constants
-    uint256 public constant PHASE_LENGTH = 9 days;                                       // Length of the phase
-    uint256 public constant MAX_PHASES = 10;                                             // Maximum number of phases
-    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**decimals;  // 65M tokens distributed after sale distribution
-    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**decimals;    // 135M tokens distributed after sale distribution
-    uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**decimals;   // 200M tokens to be distributed to community
-    uint256 public constant UKG_FUND = 800 * (10**6) * 10**decimals;                     // 800M UKG reserved for Unikrn use
-
-    // Secure wallets
-    address public ukgDepositAddr;              // Deposit address for UKG for Unikrn
+    uint256 public constant EXP_18 = 18;
+    uint256 public constant PHASE_LENGTH = 9 days;                                     // Length of the phase
+    uint256 public constant MAX_PHASES = 10;                                           // Maximum number of phases
+    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
+    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
 
     // Parameters
+    bool    public tokenAddressSet;             // Sets the state of the addition of the token contract address
     bool    public cancelDistribution;          // Call off distribution if something goes wrong prior to token distribution
     uint256 public numPresaleTokensDistributed; // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;    // Number of sale tokens that have been distributed
+    address public tokenAddress;                // Address of the ERC20 UKG token
     address public proxyContractAddress;        // Address of contract holding participant data
 
     // Timing
@@ -67,7 +60,6 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public distributionStartTimestamp;  // Time to begin distribution
 
     // Events
-    event CreateUKGEvent(address indexed _to, uint256 _value);                // Logs the creation of the token
     event DistributeSaleUKGEvent(address indexed _to, uint256 _value);        // Logs the distribution of the token
     event DistributePresaleUKGEvent(uint phase, address user, uint amount);   // Logs the user claiming their tokens
 
@@ -77,7 +69,7 @@ contract TokenDistribution is Ownable, StandardToken {
     mapping (address => uint256) public remainingAllowance;                   // Amount of tokens presale participant has left to claim
     mapping (address => bool) public saleParticipantCollected;                // Sale user has collected all funds bool
     mapping (address => uint256) public phasesClaimed;                        // Number of claimed phases
-    mapping (uint => mapping (address => bool))  public  claimed;             // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
+    mapping (uint => mapping (address => bool)) public claimed;               // Sets status of claim for presale participant. Mapping is indexed by the presale phase.
 
     mapping (uint256 => uint256) public endOfPhaseTimestamp;  // Presale participant able to claim tokens
 
@@ -98,39 +90,43 @@ contract TokenDistribution is Ownable, StandardToken {
     }
 
     /// @dev TokenDistribution(): Constructor for the sale contract
-    /// @param _ukgDepositAddr Address to deposit pre-allocated UKG
     /// @param _proxyContractAddress Address of contract holding participant data
     /// @param _freezeTimestamp Time where owner can no longer destroy the contract
     /// @param _distributionStartTimestamp Timestamp to begin the distribution phase
-    function TokenDistribution(address _ukgDepositAddr, address _proxyContractAddress, uint256 _freezeTimestamp, uint256 _distributionStartTimestamp)
+    function TokenDistribution(address _proxyContractAddress, uint256 _freezeTimestamp, uint256 _distributionStartTimestamp)
     {
-        require(_ukgDepositAddr != 0);                     // Force this value not to be initialized to 0
+        require(_proxyContractAddress != 0);               // Proxy contract must be defined
         require(_distributionStartTimestamp != 0);         // Start timestamp must be defined
         require(_freezeTimestamp != 0);                    // Freeze timestamp must be defined
-        require(_proxyContractAddress != 0);               // Proxy contract must be defined
         require(_freezeTimestamp < _distributionStartTimestamp);  // Freeze timestamp must occur before the distributionStartTimestamp
 
+        tokenAddressSet = false;                           // Token address is not set initially
         cancelDistribution = false;                        // Shut down if something goes awry
         numPresaleTokensDistributed = 0;                   // No presale tokens distributed initially
         numSaleTokensDistributed = 0;                      // No sale tokens distributed initially
-        ukgDepositAddr = _ukgDepositAddr;                  // Deposit address for UKG for Unikrn
         proxyContractAddress = _proxyContractAddress;      // Address of contract holding participant data
         freezeTimestamp = _freezeTimestamp;                // Time where owner can no longer destroy the contract
         distributionStartTimestamp = _distributionStartTimestamp;
-        balances[this] = TOTAL_COMMUNITY_ALLOCATION;       // Deposit community funds into the contract to be collected
-        Transfer(0x0, this, TOTAL_COMMUNITY_ALLOCATION);   // Transfer event for ERC20 compliance
-        CreateUKGEvent(this, TOTAL_COMMUNITY_ALLOCATION);  // Logs token creation
-        balances[ukgDepositAddr] = UKG_FUND;               // Deposit Unikrn funds that are preallocated to the Unikrn team
-        Transfer(0x0, ukgDepositAddr, UKG_FUND);           // Transfer event for ERC20 compliance
-        CreateUKGEvent(ukgDepositAddr, UKG_FUND);          // Logs Unikrn fund
-        totalSupply = TOTAL_COMMUNITY_ALLOCATION + UKG_FUND;  // 1BN tokens in ERC20 totalSupply
         // Defines the ending timestamp of the rest of the phases
         for (uint i = 0; i <= 10; i++) {
             endOfPhaseTimestamp[i] = ((i + 1) * PHASE_LENGTH) + _distributionStartTimestamp;
         }
     }
 
-    /// @dev allows user to collect their sale funds.
+    /// @dev Allows owner to set the address of the token contract
+    /// @param _tokenAddress Address of the ERC20 UKG token
+    function setTokenAddress(address _tokenAddress)
+    onlyOwner
+    {
+        require(_tokenAddress != 0);   // Token address must be defined
+        require(!tokenAddressSet);     // Token address must not be set
+
+        tokenAddressSet = true;        // Function cannot be called again
+
+        tokenAddress = _tokenAddress;  // Set the address of the token
+    }
+
+    /// @dev Allows user to collect their sale funds.
     function claimSaleTokens()
     notCanceled
     distributionStarted
@@ -147,7 +143,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
         saleParticipantCollected[msg.sender] = true;  // User cannot collect tokens again
 
-        assert(StandardToken(this).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
+        assert(StandardToken(tokenAddress).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
         DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);                // Logs token creation
     }
 
@@ -218,7 +214,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
         phasesClaimed[msg.sender] = phase;  // Define which phases have been claimed
 
-        assert(StandardToken(this).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
+        assert(StandardToken(tokenAddress).transfer(msg.sender, phaseAllocation));  // Distribute tokens to user
         DistributePresaleUKGEvent(phase, msg.sender, phaseAllocation);      // Logs the user claiming their tokens
     }
 
