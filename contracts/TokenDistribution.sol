@@ -42,7 +42,7 @@ contract TokenDistribution is Ownable, StandardToken {
     // Metadata
     string public constant name = "UnikoinGold";
     string public constant symbol = "UKG";
-    uint256 public constant decimals = 18;
+    uint8 public constant decimals = 18;
     string public version = "0.9";
 
     // Constants
