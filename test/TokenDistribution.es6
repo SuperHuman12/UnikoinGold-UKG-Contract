@@ -80,6 +80,49 @@ contract('TokenDistribution', function(accounts) {
         });
     });
 
+    //////////////////////
+    // setTokenAddress //
+    ////////////////////
+    /*
+    1. Should set the proper tokenAddress
+    2. Should throw if token address is not defined
+    3. Should throw if tokenAddress has already been set
+     */
+
+    describe("setTokenAddress", () => {
+
+        it("Should throw if tokenAddress has already been set", async () => {
+            const distribution = await TokenDistribution.new(PROXY_ADDRESS, now + 5, now + 10);
+            await distribution.setTokenAddress(ACCOUNT1);
+
+            const tokenAddr = await distribution.tokenAddress.call();
+
+            assert.equal(tokenAddr.valueOf(), ACCOUNT1, "freezeTimestamp was not initialized.");
+        });
+
+        it("Should throw if token address is not defined", async () => {
+            const distribution = await TokenDistribution.new(PROXY_ADDRESS, now + 5, now + 10);
+
+            try {
+                await distribution.setTokenAddress(0x0);
+            } catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+        });
+
+        it("Should throw if tokenAddress has already been set", async () => {
+            const distribution = await TokenDistribution.new(PROXY_ADDRESS, now + 5, now + 10);
+            await distribution.setTokenAddress(ACCOUNT1);
+            try {
+                await distribution.setTokenAddress(ACCOUNT2);
+            } catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+        });
+    });
+
     /////////////////////
     // claimSaleToken //
     ///////////////////
