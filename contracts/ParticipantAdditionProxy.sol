@@ -92,16 +92,4 @@ contract ParticipantAdditionProxy is Ownable {
 
         saleAdditionDone = true;
     }
-
-    /**
-     * Balance Functions
-     **/
-
-    function balanceOfPresaleParticipants(address _owner) constant returns (uint256 balance) {
-        return presaleBalances[_owner];
-    }
-
-    function balanceOfSaleParticipants(address _owner) constant returns (uint256 balance) {
-        return saleBalances[_owner];
-    }
 }

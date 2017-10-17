@@ -30,6 +30,9 @@ import 'zeppelin-solidity/contracts/token/StandardToken.sol';
 contract ProxyContract {
     function balanceOfPresaleParticipants(address) constant returns (uint256) {}
     function balanceOfSaleParticipants(address) constant returns (uint256) {}
+
+    mapping(address => uint256) public presaleBalances;
+    mapping(address => uint256) public saleBalances;
 }
 
 contract TokenDistribution is Ownable, StandardToken {
@@ -137,7 +140,7 @@ contract TokenDistribution is Ownable, StandardToken {
 
         ProxyContract participantData = ProxyContract(proxyContractAddress);
 
-        uint256 currentParticipantAmt = participantData.balanceOfSaleParticipants(msg.sender);  // Number of tokens to receive
+        uint256 currentParticipantAmt = participantData.saleBalances(msg.sender);  // Number of tokens to receive
         numSaleTokensDistributed  = numSaleTokensDistributed.add(currentParticipantAmt);        // Number of sale tokens distributed
 
         require(numSaleTokensDistributed <= SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens for sale
@@ -185,7 +188,7 @@ contract TokenDistribution is Ownable, StandardToken {
         // If a participant has never called the function before, assign their allocations accordingly
         if (!claimed[1][msg.sender]) {
             ProxyContract participantData = ProxyContract(proxyContractAddress);
-            presaleParticipantAllowedAllocation[msg.sender] = participantData.balanceOfPresaleParticipants(msg.sender); // Total allowed tokens. Used for division
+            presaleParticipantAllowedAllocation[msg.sender] = participantData.presaleBalances(msg.sender); // Total allowed tokens. Used for division
 
             require(presaleParticipantAllowedAllocation[msg.sender] != 0);                                     // User must have participated in the presale
 
