@@ -48,7 +48,6 @@ contract TokenDistribution is Ownable, StandardToken {
     uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
 
     // Parameters
-    bool    public tokenAddressSet;             // Sets the state of the addition of the token contract address
     bool    public cancelDistribution;          // Call off distribution if something goes wrong prior to token distribution
     uint256 public numPresaleTokensDistributed; // Number of presale tokens that have been distributed
     uint256 public numSaleTokensDistributed;    // Number of sale tokens that have been distributed
@@ -100,7 +99,6 @@ contract TokenDistribution is Ownable, StandardToken {
         require(_distributionStartTimestamp != 0);         // Start timestamp must be defined
         require(_freezeTimestamp < _distributionStartTimestamp);  // Freeze timestamp must occur before the distributionStartTimestamp
 
-        tokenAddressSet = false;                           // Token address is not set initially
         cancelDistribution = false;                        // Shut down if something goes awry
         numPresaleTokensDistributed = 0;                   // No presale tokens distributed initially
         numSaleTokensDistributed = 0;                      // No sale tokens distributed initially
@@ -119,9 +117,7 @@ contract TokenDistribution is Ownable, StandardToken {
     onlyOwner
     {
         require(_tokenAddress != 0);   // Token address must be defined
-        require(!tokenAddressSet);     // Token address must not be set
-
-        tokenAddressSet = true;        // Function cannot be called again
+        require(tokenAddress == 0x0);  // The token address must not have been initialized
 
         tokenAddress = _tokenAddress;  // Set the address of the token
     }
