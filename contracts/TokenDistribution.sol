@@ -88,6 +88,11 @@ contract TokenDistribution is Ownable {
         _;
     }
 
+    modifier isTokenAddressSet {
+        require(tokenAddress != 0x0);
+        _;
+    }
+
     /// @dev TokenDistribution(): Constructor for the sale contract
     /// @param _proxyContractAddress Address of contract holding participant data
     /// @param _freezeTimestamp Time where owner can no longer destroy the contract
@@ -125,6 +130,7 @@ contract TokenDistribution is Ownable {
     /// @dev Allows user to collect their sale funds.
     function claimSaleTokens()
     notCanceled
+    isTokenAddressSet
     distributionStarted
     {
         require(numSaleTokensDistributed < SALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
@@ -220,6 +226,7 @@ contract TokenDistribution is Ownable {
     /// @dev Called to iterate through phases and distribute tokens
     function claimPresaleTokens()
     notCanceled
+    isTokenAddressSet
     distributionStarted
     {
         require(numPresaleTokensDistributed < PRESALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
@@ -235,6 +242,7 @@ contract TokenDistribution is Ownable {
     /// @dev Function to call that allows user to claim both sale and presale tokens available at the current time
     function claimAllAvailableTokens()
     notCanceled
+    isTokenAddressSet
     distributionStarted
     {
         // Participant must not have already collected tokens from sale allocation
@@ -247,6 +255,7 @@ contract TokenDistribution is Ownable {
     /// @dev Cancels contract if something is wrong prior to distribution
     function cancelDist() external
     onlyOwner
+    isTokenAddressSet
     notFrozen
     {
         cancelDistribution = true;
