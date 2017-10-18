@@ -208,7 +208,7 @@ contract('TokenDistribution', function(accounts) {
     describe("time", () => {
 
         it("Should return the current timestamp", async () => {
-            const distribution = await TokenDistribution.deployed();
+            const distribution = await TokenDistribution.new(PROXY_ADDRESS, now - 10 , now - 5);
 
             const status = await distribution.time.call();
             assert.equal(status.valueOf(), now, "Not the right time.");
@@ -793,8 +793,7 @@ contract('TokenDistribution', function(accounts) {
     1. notFrozen
     2. notCanceled
     3. distributionStarted
-    4. presaleTokensStillAvailable
-    5. saleTokensStillAvailable
+
     */
 
     describe("modifiers", () => {
@@ -815,7 +814,10 @@ contract('TokenDistribution', function(accounts) {
         context("notCanceled", async () => {
 
             it("Should throw claimSaleTokens() with notCanceled modifier", async () => {
-                const distribution = await TokenDistribution.new(PROXY_ADDRESS, now + 100 , now + 1000);
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now + 100 , now + 1000);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
                 await distribution.cancelDist({from:ACCOUNT0});
                 try {
                     await distribution.claimSaleTokens.call();
@@ -826,7 +828,10 @@ contract('TokenDistribution', function(accounts) {
             });
 
             it("Should throw claimPresaleTokens() with notCanceled modifier", async () => {
-                const distribution = await TokenDistribution.new(PROXY_ADDRESS, now + 100 , now + 1000);
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now + 100 , now + 1000);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
                 await distribution.cancelDist({from:ACCOUNT0});
                 try {
                     await distribution.claimPresaleTokens.call();
@@ -854,6 +859,9 @@ contract('TokenDistribution', function(accounts) {
 
             it("Should throw claimSaleTokens() with distributionStarted modifier", async () => {
                 const distribution = await TokenDistribution.new(PROXY_ADDRESS, now - 10 , now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+
                 try {
                     await distribution.claimSaleTokens.call();
                 } catch (e) {
@@ -873,19 +881,25 @@ contract('TokenDistribution', function(accounts) {
             });
         });
 
-        context("saleTokensStillAvailable", async () => {
+        context("isTokenAddressSet", async () => {
 
-            it("Should throw claimSaleTokens() with saleTokensStillAvailable modifier", async () => {
+            it("Should throw claimSaleTokens() with isTokenAddressSet modifier", async () => {
                 const proxy = await ParticipantAdditionProxy.new();
                 const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-                await distribution.setTokenAddress(ukg.address);
-
-                await proxy.allocateSaleBalances([ACCOUNT1], [135 * (10**6) * 10**EXP_18]);
-                await distribution.claimSaleTokens({from:ACCOUNT1});
 
                 try {
-                    await distribution.claimSaleTokens({from:ACCOUNT2});
+                    await distribution.claimSaleTokens.call();
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
+
+            it("Should throw claimPresaleTokens() with distributionStarted modifier", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
+                try {
+                    await distribution.claimPresaleTokens.call();
                 } catch (e) {
                     return true;
                 }
@@ -893,27 +907,6 @@ contract('TokenDistribution', function(accounts) {
             });
         });
 
-        context("presaleTokensStillAvailable", async () => {
 
-            it("Should throw claimPresaleTokens() with saleTokensStillAvailable modifier", async () => {
-                const proxy = await ParticipantAdditionProxy.new();
-                const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-                await distribution.setTokenAddress(ukg.address);
-
-                // Need to push presale forward a 90+ days in order to get to the last phase
-                await increaseTime(YEAR);
-                await mine();
-                await proxy.allocatePresaleBalances([ACCOUNT1], [65 * (10 ** 6) * 10 ** EXP_18]);
-                await distribution.claimPresaleTokens({from: ACCOUNT1});
-
-                try {
-                    await distribution.claimPresaleTokens({from: ACCOUNT2});
-                } catch (e) {
-                    return true;
-                }
-                assert.fail("The function executed when it should not have.")
-            });
-        });
     });
 });
