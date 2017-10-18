@@ -36,7 +36,7 @@ contract ProxyContract {
     mapping(address => uint256) public saleBalances;
 }
 
-contract TokenDistribution is Ownable, StandardToken {
+contract TokenDistribution is Ownable {
     using SafeMath for uint;
     using Math for uint;
 
