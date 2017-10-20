@@ -5,17 +5,17 @@ module.exports = {
       port: 8545,
       network_id: "*" // Match any network id
     },
-    kovanproxy: {
+    mainproxy: {
       host: "localhost",
       port: 8545,
       network_id: "42", // Kovan network_id
-      gas: 6993150
+      gas: 6500000
     },
-    kovandistribution: {
+    maindistribution: {
       host: "localhost",
       port: 8545,
       network_id: "42", // Kovan network_id
-      gas: 6900000
+      gas: 6500000
     }
   }
 };

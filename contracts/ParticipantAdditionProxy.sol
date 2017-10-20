@@ -68,6 +68,29 @@ contract ParticipantAdditionProxy is Ownable {
         }
     }
 
+    /// @dev Removes a participant from a mapping in the event of an error
+    /// @param saleType Sale type that the participant is being removed from
+    /// @param participantAddress Address of the participant being removed
+    function removeParticipant(string saleType, address participantAddress)
+    onlyOwner
+    {
+        require(sha3(saleType) == sha3('presale') || sha3(saleType) == sha3('sale'));
+
+        if (sha3(saleType) == sha3('presale')) {
+            require(!presaleAdditionDone);
+            require(presaleBalances[participantAddress] != 0);
+            presaleAllocationTokenCount = presaleAllocationTokenCount.sub(presaleBalances[participantAddress]);
+            delete presaleBalances[participantAddress];
+        }
+
+        if (sha3(saleType) == sha3('sale')) {
+            require(!saleAdditionDone);
+            require(saleBalances[participantAddress] != 0);
+            saleAllocationTokenCount = saleAllocationTokenCount.sub(saleBalances[participantAddress]);
+            delete saleBalances[participantAddress];
+        }
+    }
+
     /**
      * State Definition Functions
      **/

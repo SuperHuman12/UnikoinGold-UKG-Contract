@@ -201,6 +201,78 @@ contract('ParticipantAdditionProxy', function(accounts) {
         });
     });
 
+    describe("removeParticipant", () => {
+
+        it("Should throw if one of the two strings is not used", async () => {
+            const token = await ParticipantAdditionProxy.new();
+            try {
+                await token.removeParticipant('badString', accounts[0]);
+            } catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+        });
+
+        it("Should throw if a user has a balance of 0", async () => {
+            const token = await ParticipantAdditionProxy.new();
+            try {
+                await token.removeParticipant('sale', accounts[0]);
+            } catch (e) {
+                return true;
+            }
+            assert.fail("The function executed when it should not have.")
+        });
+
+        it("Should remove the balance of a presale participant", async () => {
+            const token = await ParticipantAdditionProxy.new();
+            await token.allocatePresaleBalances([accounts[2]], [1]);
+
+            const particiant_val = await token.presaleBalances(accounts[2]);
+            assert.equal(particiant_val.valueOf(), 1, "Did not add to participant total");
+
+            await token.removeParticipant('presale', accounts[2]);
+            const particiant_val_two = await token.presaleBalances(accounts[2]);
+            assert.equal(particiant_val_two.valueOf(), 0, "Did not remove to participant total");
+        });
+
+        it("Should remove the balance of a sale participant", async () => {
+            const token = await ParticipantAdditionProxy.new();
+            await token.allocateSaleBalances([accounts[2]], [1]);
+
+            const particiant_val = await token.saleBalances(accounts[2]);
+            assert.equal(particiant_val.valueOf(), 1, "Did not add to participant total");
+
+            await token.removeParticipant('sale', accounts[2]);
+            const particiant_val_two = await token.saleBalances(accounts[2]);
+            assert.equal(particiant_val_two.valueOf(), 0, "Did not remove to participant total");
+        });
+
+        it("Should remove the balance from the total supply of presaleAllocationTokenCount", async () => {
+            const token = await ParticipantAdditionProxy.new();
+            await token.allocatePresaleBalances([accounts[2]], [1]);
+
+            const total_val = await token.presaleAllocationTokenCount.call();
+            assert.equal(total_val.valueOf(), 1, "Did not add to the total");
+
+            await token.removeParticipant('presale', accounts[2]);
+            const total_val_two = await token.presaleAllocationTokenCount.call();
+            assert.equal(total_val_two.valueOf(), 0, "Did not remove from the total");
+
+        });
+
+        it("Should remove the balance from the total supply of saleAllocationTokenCount", async () => {
+            const token = await ParticipantAdditionProxy.new();
+            await token.allocateSaleBalances([accounts[2]], [1]);
+
+            const total_val = await token.saleAllocationTokenCount.call();
+            assert.equal(total_val.valueOf(), 1, "Did not add to the total");
+
+            await token.removeParticipant('sale', accounts[2]);
+            const total_val_two = await token.saleAllocationTokenCount.call();
+            assert.equal(total_val_two.valueOf(), 0, "Did not remove from the total");
+        });
+    });
+
     ////////////////
     // modifiers //
     //////////////
