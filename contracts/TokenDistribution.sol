@@ -128,25 +128,29 @@ contract TokenDistribution is Ownable {
     }
 
     /// @dev Allows user to collect their sale funds.
-    function claimSaleTokens()
+    function distributeSaleTokens(address[] _participant)
+    onlyOwner
     notCanceled
     isTokenAddressSet
     distributionStarted
     {
-        require(numSaleTokensDistributed < SALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
-        require(!saleParticipantCollected[msg.sender]);                 // Participant's funds cannot have been collected already
-
         ProxyContract participantData = ProxyContract(proxyContractAddress);
+        uint256 currentParticipantAmt;
 
-        uint256 currentParticipantAmt = participantData.saleBalances(msg.sender);                // Number of tokens to receive
-        numSaleTokensDistributed  = numSaleTokensDistributed.add(currentParticipantAmt);         // Number of sale tokens distributed
+        for (uint256 i = 0; i < _participant.length; i++) {
+            require(numSaleTokensDistributed < SALE_TOKEN_ALLOCATION_CAP);  // Cannot distribute more tokens than available
+            require(!saleParticipantCollected[_participant[i]]);            // Participant's funds cannot have been collected already
 
-        require(numSaleTokensDistributed <= SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens for sale
+            currentParticipantAmt = participantData.saleBalances(_participant[i]);  // Number of tokens to receive
+            numSaleTokensDistributed  = numSaleTokensDistributed.add(currentParticipantAmt);  // Number of sale tokens distributed
 
-        saleParticipantCollected[msg.sender] = true;  // User cannot collect tokens again
+            require(numSaleTokensDistributed <= SALE_TOKEN_ALLOCATION_CAP);  // Cannot allocate > 135M tokens for sale
 
-        assert(StandardToken(tokenAddress).transfer(msg.sender, currentParticipantAmt));  // Distributes tokens to participant
-        DistributeSaleUKGEvent(msg.sender, currentParticipantAmt);                        // Logs token creation
+            saleParticipantCollected[_participant[i]] = true;  // User cannot collect tokens again
+
+            assert(StandardToken(tokenAddress).transfer(_participant[i], currentParticipantAmt));  // Distributes tokens to participant
+            DistributeSaleUKGEvent(_participant[i], currentParticipantAmt);                        // Logs token creation
+        }
     }
 
     /// @dev Returns block timestamp. Function needed for testing.
@@ -237,19 +241,6 @@ contract TokenDistribution is Ownable {
 
     function () {
         revert();
-    }
-
-    /// @dev Function to call that allows user to claim both sale and presale tokens available at the current time
-    function claimAllAvailableTokens()
-    notCanceled
-    isTokenAddressSet
-    distributionStarted
-    {
-        // Participant must not have already collected tokens from sale allocation
-        if (!saleParticipantCollected[msg.sender]) {
-            claimSaleTokens();
-        }
-        claimPresaleTokens();
     }
 
     /// @dev Cancels contract if something is wrong prior to distribution

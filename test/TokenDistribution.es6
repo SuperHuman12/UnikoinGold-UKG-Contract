@@ -20,6 +20,11 @@ contract('TokenDistribution', function(accounts) {
     const ACCOUNT0 = accounts[0];
     const ACCOUNT1 = accounts[1];
     const ACCOUNT2 = accounts[2];
+    const ACCOUNT3 = accounts[3];
+    const ACCOUNT4 = accounts[4];
+    const ACCOUNT5 = accounts[5];
+    const ACCOUNT6 = accounts[6];
+    const ACCOUNT7 = accounts[7];
     const UKG_FUND = accounts[8];
     const PROXY_ADDRESS = accounts[9];
 
@@ -122,79 +127,129 @@ contract('TokenDistribution', function(accounts) {
         });
     });
 
-    /////////////////////
-    // claimSaleToken //
-    ///////////////////
+    ///////////////////////////
+    // distributeSaleTokens //
+    /////////////////////////
     /*
-    1. Should allow users to claim their funds from the sale
-    2. Should throw because the user has already collected their funds
-    3. Should update numSaleTokensDistributed with user's allocation
-    4. Should throw if all 135M tokens have been distributed
-     */
+    1. Should allow users to receive their funds from the sale
+    2. Should not distribute to a user that was not on the sale list
+    3. Should not allow a user to be distributed to twice
+    4. Should update numSaleTokensDistributed with user's allocation
+    5. Should throw if all 135M tokens have been distributed
+    6. Should throw and not distribute tokens to current array of participants if someone is added twice
+    */
+    describe("AutoDistribution", () => {
 
-    describe("claimSaleToken", () => {
+        context("Distribution", async () => {
 
-        it("Should allow users to claim their funds from the sale", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-            const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-            await distribution.setTokenAddress(ukg.address);
+            it("Should allow users to receive their funds from the sale", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10, now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+                await proxy.allocateSaleBalances([ACCOUNT1, ACCOUNT2, ACCOUNT3, ACCOUNT4, ACCOUNT5, ACCOUNT6, ACCOUNT7], [1, 2, 3, 4, 5, 6, 7]);
+                await distribution.distributeSaleTokens([ACCOUNT1, ACCOUNT2, ACCOUNT3, ACCOUNT4, ACCOUNT5, ACCOUNT6, ACCOUNT7]);
 
-            await proxy.allocateSaleBalances([PROXY_ADDRESS], [1]);
-            await distribution.claimSaleTokens({from:PROXY_ADDRESS});
-            const balance = await ukg.balanceOf.call(PROXY_ADDRESS);
+                const balance1 = await ukg.balanceOf.call(ACCOUNT1);
+                const balance2 = await ukg.balanceOf.call(ACCOUNT2);
+                const balance3 = await ukg.balanceOf.call(ACCOUNT3);
+                const balance4 = await ukg.balanceOf.call(ACCOUNT4);
+                const balance5 = await ukg.balanceOf.call(ACCOUNT5);
+                const balance6 = await ukg.balanceOf.call(ACCOUNT6);
+                const balance7 = await ukg.balanceOf.call(ACCOUNT7);
 
-            assert.equal(balance.valueOf(), 1, "DIDN'T WORK.");
-        });
+                assert.equal(balance1.valueOf(), 1, "DIDN'T WORK.");
+                assert.equal(balance2.valueOf(), 2, "DIDN'T WORK.");
+                assert.equal(balance3.valueOf(), 3, "DIDN'T WORK.");
+                assert.equal(balance4.valueOf(), 4, "DIDN'T WORK.");
+                assert.equal(balance5.valueOf(), 5, "DIDN'T WORK.");
+                assert.equal(balance6.valueOf(), 6, "DIDN'T WORK.");
+                assert.equal(balance7.valueOf(), 7, "DIDN'T WORK.");
+            });
 
-        it("Should throw because the user has already collected their funds", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-            const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-            await distribution.setTokenAddress(ukg.address);
+            it("Should not distribute to a user that was not on the sale list", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10, now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+                await proxy.allocateSaleBalances([ACCOUNT1], [1]);
+                await distribution.distributeSaleTokens([ACCOUNT1, ACCOUNT2]);
 
-            await proxy.allocateSaleBalances([ACCOUNT1], [1]);
-            await distribution.claimSaleTokens({from:ACCOUNT1});
+                const balance1 = await ukg.balanceOf.call(ACCOUNT1);
+                const balance2 = await ukg.balanceOf.call(ACCOUNT2);
 
-            try {
-                await distribution.claimSaleTokens({from:ACCOUNT1});
-            } catch (e) {
-                return true;
-            }
-            assert.fail("The function executed when it should not have.")
-        });
+                assert.equal(balance1.valueOf(), 1, "DIDN'T WORK.");
+                assert.equal(balance2.valueOf(), 0, "DIDN'T WORK.");
+            });
 
-        it("Should update numSaleTokensDistributed with user's allocation", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-            const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-            await distribution.setTokenAddress(ukg.address);
-            const VAL = 1;
+            it("Should not allow a user to be distributed to twice", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10, now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+                await proxy.allocateSaleBalances([ACCOUNT1], [1]);
+                await distribution.distributeSaleTokens([ACCOUNT1]);
 
-            await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
-            await distribution.claimSaleTokens({from:ACCOUNT1});
+                const balance1 = await ukg.balanceOf.call(ACCOUNT1);
 
-            const numSaleTokensDistributed = await distribution.numSaleTokensDistributed.call();
-            assert.equal(numSaleTokensDistributed.valueOf(), VAL, "DIDN'T WORK.");
-        });
+                assert.equal(balance1.valueOf(), 1, "DIDN'T WORK.");
 
-        it("Should throw if all 135M tokens have been distributed", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-            const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-            await distribution.setTokenAddress(ukg.address);
-            const VAL = 135 * (10**6) * 10**EXP_18;
+                try {
+                    await distribution.distributeSaleTokens([ACCOUNT1]);
+                } catch (e) {
+                    return true;
+                }
+                assert.fail("The function executed when it should not have.")
+            });
 
-            await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
-            await distribution.claimSaleTokens({from:ACCOUNT1});
 
-            try {
-                await distribution.claimSaleTokens({from:ACCOUNT1});
-            } catch (e) {
-                return true;
-            }
+            it("Should update numSaleTokensDistributed with user's allocation", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10, now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+                await proxy.allocateSaleBalances([ACCOUNT1], [1]);
+                await distribution.distributeSaleTokens([ACCOUNT1]);
 
-            assert.fail("The function executed when it should not have.")
+                const numSaleTokensDistributed = await distribution.numSaleTokensDistributed.call();
+                assert.equal(numSaleTokensDistributed.valueOf(), 1, "DIDN'T WORK.");
+            });
+
+            it("Should throw if all 135M tokens have been distributed", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10, now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+                const VAL = 135 * (10**6) * 10**EXP_18;
+
+                await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
+                await distribution.distributeSaleTokens([ACCOUNT1]);
+
+                try {
+                    await distribution.distributeSaleTokens({from:ACCOUNT1});
+                } catch (e) {
+                    return true;
+                }
+
+                assert.fail("The function executed when it should not have.")
+            });
+
+
+            it("Should throw and not distribute tokens to current array of participants if someone is added twice", async () => {
+                const proxy = await ParticipantAdditionProxy.new();
+                const distribution = await TokenDistribution.new(proxy.address, now - 10, now - 5);
+                const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
+                await distribution.setTokenAddress(ukg.address);
+                await proxy.allocateSaleBalances([ACCOUNT1, ACCOUNT2], [1, 2]);
+                try {
+                    await distribution.distributeSaleTokens([ACCOUNT1, ACCOUNT2, ACCOUNT1]);
+                } catch (e) {
+                    const balance1 = await ukg.balanceOf.call(ACCOUNT1);
+                    const balance2 = await ukg.balanceOf.call(ACCOUNT2);
+                    assert.equal(balance1.valueOf(), 0, "DIDN'T WORK.");
+                    assert.equal(balance2.valueOf(), 0, "DIDN'T WORK.");
+                }
+            });
         });
     });
 
@@ -722,49 +777,6 @@ contract('TokenDistribution', function(accounts) {
         });
     });
 
-    //////////////////////////////
-    // claimAllAvailableTokens //
-    ////////////////////////////
-    /*
-    1. Should execute claimSaleTokens and claimPresaleTokens successfully
-     */
-    describe("claimAllTokens", () => {
-
-        it("Should execute claimSaleTokens and claimPresaleTokens successfully", async () => {
-            const proxy = await ParticipantAdditionProxy.new();
-            const distribution = await TokenDistribution.new(proxy.address, now - 10 , now - 5);
-            const ukg = await UnikoinGold.new(distribution.address, ACCOUNT0);
-            await distribution.setTokenAddress(ukg.address);
-            const VAL = 100;
-
-            await proxy.allocateSaleBalances([ACCOUNT1], [VAL]);
-            await proxy.allocatePresaleBalances([ACCOUNT1], [VAL]);
-
-            // Need to get into phase 10
-            await increaseTime(DAY * 10);
-            await mine();
-
-            await distribution.claimAllAvailableTokens({from: ACCOUNT1});
-            const balance1 = await ukg.balanceOf.call(ACCOUNT1);
-
-            assert.equal(balance1.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
-
-            await distribution.claimAllAvailableTokens({from: ACCOUNT1});
-
-            assert.equal(balance1.valueOf(), VAL + (Math.floor(VAL/10) + (VAL%10)), "Not the correct value");
-
-            // Need to get into phase 10
-            await increaseTime(DAY * 90);
-            await mine();
-
-            await distribution.claimAllAvailableTokens({from: ACCOUNT1});
-            const balance2 = await ukg.balanceOf.call(ACCOUNT1);
-
-            assert.equal(balance2.valueOf(), VAL * 2, "Not the correct value");
-
-        });
-    });
-
     /////////////////
     // cancelDist //
     ///////////////
@@ -906,7 +918,5 @@ contract('TokenDistribution', function(accounts) {
                 assert.fail("The function executed when it should not have.")
             });
         });
-
-
     });
 });

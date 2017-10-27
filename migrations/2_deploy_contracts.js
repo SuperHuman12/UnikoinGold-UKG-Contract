@@ -8,7 +8,7 @@ const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-const PROXY_ADDRESS = '0x9C4FB06fACea33F36C4EBB5fE491a2da61544A6E';
+const PROXY_ADDRESS = '0x52f04d73346fD754758d877c3eaa040c828E31D8';
 const UKG_FUND =  web3.eth.coinbase;
 
 const FREEZE_TIMESTAMP = now + (1 * DAY);
