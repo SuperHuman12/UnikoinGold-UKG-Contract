@@ -1,4 +1,4 @@
-This repository defines the UnikoinGold token distribution flow and provides additional information surrounding the distribution of UKG. 
+This repository defines the UnikoinGold token distribution flow and provides additional information surrounding the distribution of UKG. The ERC20 token will distribute 1 Billion UKG in total.
 
 ## Table of Contents
 
