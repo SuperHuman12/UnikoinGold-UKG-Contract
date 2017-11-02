@@ -1,6 +1,6 @@
 var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 var TokenDistribution = artifacts.require("./TokenDistribution.sol");
-var UnikoinGold = artifacts.require("./UnikoinGold.sol");
+var UnikoinGold = artifacts.require("./UTest4.sol");
 
 now = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
 
@@ -8,11 +8,11 @@ const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-const PROXY_ADDRESS = '0x52f04d73346fD754758d877c3eaa040c828E31D8';
+const PROXY_ADDRESS = '0x9c054ccff9a3b80fa28b784fecf177d398922554';
 const UKG_FUND =  web3.eth.coinbase;
 
-const FREEZE_TIMESTAMP = now + (1 * DAY);
-const DISTRIBUTION_START_TIMESTAMP = now + (2 * DAY);
+const FREEZE_TIMESTAMP = now+300;
+const DISTRIBUTION_START_TIMESTAMP = now+600;
 
 module.exports = function(deployer, network) {
 

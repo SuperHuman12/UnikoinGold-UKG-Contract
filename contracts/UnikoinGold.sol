@@ -9,7 +9,7 @@ contract UnikoinGold is StandardToken {
     string public constant name = "UnikoinGold";
     string public constant symbol = "UKG";
     uint8 public constant decimals = 18;
-    string public version = "0.9";
+    string public version = "1.0";
 
     uint256 public constant EXP_18 = 18;
     uint256 public constant TOTAL_COMMUNITY_ALLOCATION = 200 * (10**6) * 10**EXP_18;  // 200M tokens to be distributed to community
