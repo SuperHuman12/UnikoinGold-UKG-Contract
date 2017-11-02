@@ -44,8 +44,8 @@ contract TokenDistribution is Ownable {
     uint256 public constant EXP_18 = 18;
     uint256 public constant PHASE_LENGTH = 9 days;                                     // Length of the phase
     uint256 public constant MAX_PHASES = 10;                                           // Maximum number of phases
-    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 65 * (10**6) * 10**EXP_18;  // 65M tokens distributed after sale distribution
-    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 135 * (10**6) * 10**EXP_18;    // 135M tokens distributed after sale distribution
+    uint256 public constant PRESALE_TOKEN_ALLOCATION_CAP = 9500000333530000000000000;  // tokens distributed after sale distribution
+    uint256 public constant SALE_TOKEN_ALLOCATION_CAP = 190499999666470000000000000;    // tokens distributed after sale distribution
 
     // Parameters
     bool    public cancelDistribution;          // Call off distribution if something goes wrong prior to token distribution
