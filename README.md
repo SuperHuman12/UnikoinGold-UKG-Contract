@@ -36,8 +36,7 @@ in order to finalize this contract. After these are called, this contract will n
 - 200 million total tokens distributed between presale and sale participants
 - Both sale and presale participants will have their balances checked by the proxy contract that is already on the
 blockchain
-- Sale participants will receive their tokens calling a function to claim them
-        - This will be done programmatically with a script that distributes the token via multiple transactions
+- Sale participants will receive their tokens automatically
 - Locked Presale participants will receive their tokens at a rate of 10% every 9 days over a total of 90 days
     - A call to the claim function will give them all their available tokens, to date
     - These participants will have to call `claimPresaleTokens` function to receive these tokens
@@ -89,3 +88,6 @@ Run all tests:
 ```
 truffle test
 ```
+
+## Thanks
+Thank you [CoinCircle](https://coincircle.com/) for the relentless efforts to make this happen! Make sure to also checkout the [CoinCircle Github](https://github.com/coincircle).
