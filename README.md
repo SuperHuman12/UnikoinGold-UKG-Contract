@@ -1,5 +1,4 @@
-This repository defines the UnikoinGold token distribution flow and provides additional information surrounding the
-distribution of UKG. 
+This repository defines the UnikoinGold token distribution flow and provides additional information surrounding the distribution of UKG. 
 
 ## Table of Contents
 
@@ -20,7 +19,6 @@ distribution of UKG.
 a system we built.**
 - The sale will consist of users sending funds to specific wallet addresses, prior to the use audited smart contracts
 - Their contribution amount will be added to a DB consisting of wallet addresses and their associated balances
-- Users can contribute a minimum of $30 USD and a maximum of $100k USD
 
 ### Participant Addition
 - **This contract will collect no funds**. All funds will have been collected prior to the deployment of this contract
@@ -38,44 +36,31 @@ in order to finalize this contract. After these are called, this contract will n
 - 200 million total tokens distributed between presale and sale participants
 - Both sale and presale participants will have their balances checked by the proxy contract that is already on the
 blockchain
-- Sale participants will receive their tokens immediately upon calling a function to claim them
-- Presale participants will receive their tokens at a rate of 10% every 9 days over a total of 90 days
+- Sale participants will receive their tokens calling a function to claim them
+        - This will be done programmatically with a script that distributes the token via multiple transactions
+- Locked Presale participants will receive their tokens at a rate of 10% every 9 days over a total of 90 days
     - A call to the claim function will give them all their available tokens, to date
     - These participants will have to call `claimPresaleTokens` function to receive these tokens
             - IE if the user calls clam for the first time after 19 days, they will receive 20% of their tokens
         - This function will iterate through phases in `claimPresaleTokensIterate` 
         - The first phase to receive tokens is phase 1
-- If something goes wrong, the owner can call of the contract 1 day before the distribution begins
 
 ## Contracts
 
 ### Descriptions
 
-#### [SafeMath.sol](https://github.com/CoinCircle/ukg-distrbution/blob/master/contracts/SafeMath.sol)
-SafeMath library used to protect against overflows during math logic throughout the contracts.
+#### [ParticipantAdditionProxy.sol](https://github.com/unikoingold/UnikoinGold-UKG-Contract/blob/master/contracts/ParticipantAdditionProxy.sol)
+Contract to add users to the sale and presale contributors list. The data in this contract will be called by the main token distribution contract.
 
-#### [Ownable.sol](https://github.com/CoinCircle/ukg-distrbution/blob/master/contracts/Ownable.sol)
-The Ownable contract has an owner address, and provides basic authorization control functions, this simplifies the 
-implementation of "user permissions".
+#### [TokenDistribution.sol](https://github.com/unikoingold/UnikoinGold-UKG-Contract/blob/master/contracts/TokenDistribution.sol)
+This contract creates tokens and holds them until users claim them. Locked presale participants will receive 10% of their funds via a call every 9 days for 90 days.
 
-#### [Token.sol](https://github.com/CoinCircle/ukg-distrbution/blob/master/contracts/Token.sol)
-ERC20 token standard.
-
-#### [ParticipantAddiitionProxy.sol](https://github.com/CoinCircle/ukg-distrbution/blob/master/contracts/ParticipantAdditionProxy.sol)
-Contract to add users to the sale and presale contributors list. The data in this contract will be called by the main
-token distribution contract.
-
-#### [TokenDistribution.sol](https://github.com/CoinCircle/ukg-distrbution/blob/master/contracts/TokenDistribution.sol)
-This contract creates tokens and holds them until users claim them. Sale participants can claim their tokens immediately
-while presale participants will receive 10% of their funds via a call every 9 days for 90 days.
-
-## Specificaitons
+## Specifications
 
 
 ### Functions
 Name | Keywords | Description
 --- | --- | ---
-claimSaleTokens() | `external` `notCanceled` `distributionStarted` `saleTokensStillAvailable` | Distributes tokens to sale participants.
 time() | `constant` | Returns the block.timstamp. Necessary for testing.
 currentPhase() | `constant` | Returns the current phase number that the distribution is on.
 min() | `private` | Returns the mininum of two numbers.
@@ -84,7 +69,6 @@ timeRemainingInPhase() | `constant` | Returns the time remaining in the current 
 phasesClaimable() | `constant` | Returns the number of phases a participant has available to claim
 claimPresaleTokensIterate(phase) | `internal` | Internal function that gets looped through based on when presale user calls claimPresaleTokens().
 claimPresaleTokens() | `external` `notCanceled` `distributionStarted` `presaleTokensStillAvailable` | User calls this function to claim their presale tokens.
-claimAllAvailableTokens() | `notCanceled` `distributionStarted` | Function to call that allows user to claim both sale and presale tokens available at the current time
 cancelDistribution() | `external` `onlyOwner` `notFrozen` | Cancels distribution if a false parameter is entered.
 
 ## Setup
