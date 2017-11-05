@@ -1,5 +1,25 @@
 This repository defines the UnikoinGold token distribution flow and provides additional information surrounding the distribution of UKG. The ERC20 token will distribute 1 Billion UKG in total.
 
+You can find the UKG Contract at https://unikoingold.com/contract.
+
+# UKG Links
+Token Contract Address: 0x24692791Bc444c5Cd0b81e3CBCaba4b04Acd1F3B
+Token Symbol:UKG
+Decimals: 18
+Website: https://unikoingold.com
+Official Contact Email Address: support@unikoingold.com
+FAQ: https://unikoingold.com/faq
+Twitter: https://twitter.com/unikoingold
+Facebook: https://www.facebook.com/unikoingold
+Blog: https://news.unikrn.com/topic/UnikoinGold
+Bitcointalk: https://bitcointalk.org/index.php?topic=2206150.40
+Github: https://github.com/unikoingold/UnikoinGold-UKG-Contract
+Whitepaper: https://unikoingold.com/whitepaper
+Reddit: https://www.reddit.com/r/unikoingold/
+Discord: https://community.unikrn.com
+UKG Logo: https://f.unkrn.com/2017-11-04/a/1509813079_unikoin-icon-gold.svg
+ 
+
 ## Table of Contents
 
 * [Deployment](#deployment)
