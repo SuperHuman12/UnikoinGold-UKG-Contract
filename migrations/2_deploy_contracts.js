@@ -1,6 +1,6 @@
 var ParticipantAdditionProxy = artifacts.require("./ParticipantAdditionProxy.sol");
 var TokenDistribution = artifacts.require("./TokenDistribution.sol");
-var UnikoinGold = artifacts.require("./UTest4.sol");
+var UnikoinGold = artifacts.require("./UnikoinGold.sol");
 
 now = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
 
