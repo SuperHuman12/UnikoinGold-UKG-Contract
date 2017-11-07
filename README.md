@@ -2,6 +2,8 @@ This repository defines the UnikoinGold token distribution flow and provides add
 
 You can find the UKG Contract at https://unikoingold.com/contract.
 
+You can find the [UnikoinGold audit report](https://blog.zeppelin.solutions/unikoingold-token-audit-aafb7de07f3) from Zeppelin Solutions [here](https://blog.zeppelin.solutions/unikoingold-token-audit-aafb7de07f3).
+
 # UKG Links
 * Token Contract Address: 0x24692791Bc444c5Cd0b81e3CBCaba4b04Acd1F3B
 * Token Symbol:UKG
@@ -112,3 +114,4 @@ truffle test
 
 ## Thanks
 Thank you [CoinCircle](https://coincircle.com/) for the relentless efforts to make this happen! Make sure to also checkout the [CoinCircle Github](https://github.com/coincircle).
+Thank you [Zeppelin](https://zeppelin.solutions/) for the helping us to make UKG even more secure. 
