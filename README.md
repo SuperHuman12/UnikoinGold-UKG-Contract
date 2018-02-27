@@ -21,6 +21,7 @@ You can find the [UnikoinGold audit report](https://blog.zeppelin.solutions/unik
 * Discord: https://community.unikrn.com
 * UKG Logo: https://f.unkrn.com/2017-11-04/a/1509813079_unikoin-icon-gold.svg
 * Unikrn Website: https://unikrn.com
+* You found a bug / security flaw, who do I contact? Please contact us via security@unikrn.com (GPG https://unikrn.com/unikrn.asc) or https://hackerone.com/unikrn. Thx!
  
 
 ## Table of Contents
